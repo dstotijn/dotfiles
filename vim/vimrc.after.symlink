@@ -1,5 +1,6 @@
 set nonumber
 set listchars-=trail:.
 let g:NERDTreeWinSize=40
+let g:NERDTreeShowHidden=1
 set background=dark
 color solarized
