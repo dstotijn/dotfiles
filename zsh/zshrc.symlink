@@ -72,3 +72,10 @@ export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
 
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
+
+# use .localrc for local stuff that you don't
+# want in the repo.
+if [[ -a ~/.localzshrc ]]
+then
+  source ~/.localzshrc
+fi
