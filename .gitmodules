@@ -1,0 +1,3 @@
+[submodule "janus.symlink/vim-hybrid"]
+	path = janus.symlink/vim-hybrid
+	url = https://github.com/w0ng/vim-hybrid
