@@ -1,3 +1,9 @@
 [submodule "janus.symlink/vim-hybrid"]
 	path = janus.symlink/vim-hybrid
 	url = https://github.com/w0ng/vim-hybrid
+[submodule "janus.symlink/vim-airline"]
+	path = janus.symlink/vim-airline
+	url = https://github.com/bling/vim-airline
+[submodule "janus.symlink/vim-drupal"]
+	path = janus.symlink/vim-drupal
+	url = http://git.drupal.org/project/vimrc.git
