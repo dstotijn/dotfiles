@@ -1,3 +1,9 @@
 .DS_Store
 *~
 *.swp
+
+# Exuberant Ctags
+.tags
+
+# Drupal dev settings
+sites/*.dev
