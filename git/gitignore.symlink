@@ -4,6 +4,7 @@
 
 # Exuberant Ctags
 .tags
+tags
 
 # Drupal dev settings
 sites/*.dev
