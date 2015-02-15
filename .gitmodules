@@ -7,3 +7,6 @@
 [submodule "janus.symlink/vim-drupal"]
 	path = janus.symlink/vim-drupal
 	url = http://git.drupal.org/project/vimrc.git
+[submodule "janus.symlink/editorconfig-vim"]
+	path = janus.symlink/editorconfig-vim
+	url = https://github.com/editorconfig/editorconfig-vim.git
