@@ -1,7 +1,0 @@
-set listchars-=trail:.
-set guioptions-=L
-set guioptions-=r
-let NERDTreeShowHidden=1
-let g:NERDTreeWinSize=45
-let g:hybrid_use_Xresources = 1
-colorscheme hybrid
