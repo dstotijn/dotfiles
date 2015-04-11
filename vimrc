@@ -89,3 +89,8 @@ nnoremap <Leader>ww <C-w>w
 nnoremap <Leader>n :NERDTreeToggle<CR>
 nnoremap <Leader>t :TagbarToggle<CR>
 nnoremap <Leader>ag :Ag!<Space>
+
+" Source local vimrc
+if filereadable($HOME . "/.vimrc.local")
+  source ~/.vimrc.local
+endif
