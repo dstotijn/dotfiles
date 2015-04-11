@@ -1,0 +1,15 @@
+*.swp
+*~
+._*
+.DS_Store
+tags
+.git
+.cache
+.bundle
+.sass-cache
+vendor/cache
+*.zip
+*.tar.gz
+*.tar.bz2
+*.rar
+*.tar.xz
