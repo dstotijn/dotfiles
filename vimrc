@@ -1,14 +1,17 @@
 " Pathogen
 runtime bundle/vim-pathogen/autoload/pathogen.vim
-execute pathogen#infect()
+execute pathogen#infect('bundle/{}', 'custom/{}')
 
 " Vim behavior
 set nocompatible
-set wildmenu
 set backupdir^=~/.vim/.bak//
 set directory^=~/.vim/.tmp//
 set undofile
 set undodir=~/.vim/.tmp/
+set wildmenu
+set wildignore+=*.swp,*~,._*,.DS_Store,tags
+set wildignore+=*/.git,*/.cache,*/.bundle,*/vendor/cache,*/.sass-cache
+set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz
 
 " File (type) and character handling
 filetype plugin indent on
@@ -62,7 +65,6 @@ if executable("ag")
   set grepprg=ag\ --nogroup\ --nocolor
   let g:ctrlp_user_command = 'ag %s -l --nocolor --hidden -g ""'
 endif
-set wildignore+=*.swp,*~,._*,.DS_Store,tags,*/.git*,*/.cache*,*/.bundle*,*/vendor/cache*,*/.sass-cache*,*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz
 
 " Moving lines
 nnoremap <C-j> :m .+1<CR>==
@@ -76,14 +78,16 @@ vnoremap <C-k> :m '<-2<CR>gv=gv
 nnoremap <Tab> %
 vnoremap <Tab> %
 
-" File management
-nnoremap <Leader>e :e<Space>
-
-" Window management
+" File and window management
 nnoremap <Leader>w :w<CR>
 nnoremap q :q<CR>
 nnoremap qq :qa<CR>
+nnoremap <Leader>e :e<Space>
 nnoremap <Leader>ww <C-w>w
+nnoremap <Leader>wj <C-w>j
+nnoremap <Leader>wk <C-w>k
+nnoremap <Leader>wh <C-w>h
+nnoremap <Leader>wl <C-w>l
 
 " Plugin key bindings
 nnoremap <Leader>n :NERDTreeToggle<CR>
@@ -91,6 +95,6 @@ nnoremap <Leader>t :TagbarToggle<CR>
 nnoremap <Leader>ag :Ag!<Space>
 
 " Source local vimrc
-if filereadable($HOME . "/.vimrc.local")
+if filereadable("~/.vimrc.local")
   source ~/.vimrc.local
 endif
