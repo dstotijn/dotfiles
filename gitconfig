@@ -1,12 +1,14 @@
-[hub]
-  protocol = https
-[credential]
-  helper = GIT_CREDENTIAL_HELPER
-[alias]
-  co = checkout
-  ac = !git add -A && git commit
 [core]
   excludesfile = ~/.gitignore
   editor = vim
+[credential]
+  helper = GIT_CREDENTIAL_HELPER
+[hub]
+  protocol = https
+[push]
+  default = simple
+[alias]
+  co = checkout
+  ac = !git add -A && git commit
 [include]
   path = ~/.gitconfig.local
