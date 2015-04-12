@@ -95,6 +95,6 @@ nnoremap <Leader>t :TagbarToggle<CR>
 nnoremap <Leader>ag :Ag!<Space>
 
 " Source local vimrc
-if filereadable("~/.vimrc.local")
+if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
