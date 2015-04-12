@@ -12,6 +12,7 @@ set wildmenu
 set wildignore+=*.swp,*~,._*,.DS_Store,tags
 set wildignore+=*/.git,*/.cache,*/.bundle,*/vendor/cache,*/.sass-cache
 set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz
+set keywordprg=:help
 
 " File (type) and character handling
 filetype plugin indent on
@@ -61,10 +62,6 @@ set gdefault
 set incsearch
 set hlsearch
 nnoremap <Leader><Space> :noh<CR>
-if executable("ag")
-  set grepprg=ag\ --nogroup\ --nocolor
-  let g:ctrlp_user_command = 'ag %s -l --nocolor --hidden -g ""'
-endif
 
 " Moving lines
 nnoremap <C-j> :m .+1<CR>==
@@ -78,16 +75,41 @@ vnoremap <C-k> :m '<-2<CR>gv=gv
 nnoremap <Tab> %
 vnoremap <Tab> %
 
-" File and window management
+" File management
 nnoremap <Leader>w :w<CR>
 nnoremap q :q<CR>
 nnoremap qq :qa<CR>
 nnoremap <Leader>e :e<Space>
+
+" Window management
+set splitbelow
+set splitright
 nnoremap <Leader>ww <C-w>w
 nnoremap <Leader>wj <C-w>j
 nnoremap <Leader>wk <C-w>k
 nnoremap <Leader>wh <C-w>h
 nnoremap <Leader>wl <C-w>l
+
+" Lists
+nnoremap <Leader>ll :ll<CR>
+
+" CtrlP settings
+if executable("ag")
+  let g:ctrlp_by_filename = 1
+  let g:ctrlp_use_caching = 0
+  let g:ctrlp_user_command = 'ag %s --nocolor --hidden -g ""'
+  let g:ctrlp_lazy_update = 500
+endif
+
+" Syntastic settings
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 2
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_auto_jump = 3
 
 " Plugin key bindings
 nnoremap <Leader>n :NERDTreeToggle<CR>
