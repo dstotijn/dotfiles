@@ -37,7 +37,6 @@ set scrolloff=10
 set sidescrolloff=10
 set laststatus=2
 set visualbell
-set noshowmatch
 set number
 set linespace=2
 set list
@@ -46,9 +45,6 @@ set listchars+=extends:>
 set listchars+=precedes:<
 set guioptions-=L
 set guioptions-=r
-let NERDTreeShowHidden = 1
-let g:NERDTreeRespectWildIgnore = 1
-let g:NERDTreeWinSize = 45
 
 " Colorscheme and font settings
 colorscheme hybrid
@@ -85,10 +81,6 @@ nnoremap <Leader>e :e<Space>
 set splitbelow
 set splitright
 nnoremap <Leader>ww <C-w>w
-nnoremap <Leader>wj <C-w>j
-nnoremap <Leader>wk <C-w>k
-nnoremap <Leader>wh <C-w>h
-nnoremap <Leader>wl <C-w>l
 
 " Lists
 nnoremap <Leader>ll :ll<CR>
@@ -96,7 +88,6 @@ nnoremap <Leader>ll :ll<CR>
 " CtrlP settings
 if executable("ag")
   let g:ctrlp_by_filename = 1
-  let g:ctrlp_use_caching = 0
   let g:ctrlp_user_command = 'ag %s --nocolor --hidden -g ""'
   let g:ctrlp_lazy_update = 500
 endif
@@ -110,6 +101,14 @@ let g:syntastic_auto_loc_list = 2
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_auto_jump = 3
+
+" NERDTree settings
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+let NERDTreeShowHidden = 1
+let NERDTreeChDirMode = 2
+let g:NERDTreeRespectWildIgnore = 1
+let g:NERDTreeWinSize = 45
 
 " Plugin key bindings
 nnoremap <Leader>n :NERDTreeToggle<CR>
