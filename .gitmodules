@@ -40,3 +40,6 @@
 [submodule "vim/bundle/ag.vim"]
 	path = vim/bundle/ag.vim
 	url = git@github.com:rking/ag.vim.git
+[submodule "autoenv"]
+	path = autoenv
+	url = git://github.com/kennethreitz/autoenv.git

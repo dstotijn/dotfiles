@@ -1,10 +1,9 @@
 export ZSH=~/.oh-my-zsh
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
+export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
 export EDITOR="mvim"
 
 ZSH_THEME="robbyrussell"
-ENABLE_CORRECTION="true"
 
-plugins=(git)
+plugins=(git virtualenvwrapper autoenv)
 
 source $ZSH/oh-my-zsh.sh

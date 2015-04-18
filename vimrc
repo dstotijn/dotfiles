@@ -9,8 +9,8 @@ set directory^=~/.vim/.tmp//
 set undofile
 set undodir=~/.vim/.tmp/
 set wildmenu
-set wildignore+=*.swp,*~,._*,.DS_Store,tags
-set wildignore+=*/.git,*/.cache,*/.bundle,*/vendor/cache,*/.sass-cache
+set wildignore+=*.swp,*~,._*,*.pyc,*.pyo,.DS_Store,tags
+set wildignore+=*/.git,*/.cache,*/.bundle,*/vendor/cache,*/.sass-cache,*/__pycache__
 set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz
 set keywordprg=:help
 
@@ -98,7 +98,6 @@ set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 2
-let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_auto_jump = 3
 
