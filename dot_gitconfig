@@ -1,0 +1,17 @@
+[core]
+	excludesfile = ~/.gitignore
+	editor = vim
+[user]
+	name = David Stotijn
+	email = dstotijn@gmail.com
+	signingkey = /Users/dstotijn/.ssh/id_ed25519.pub
+[commit]
+	gpgsign = true
+[tag]
+	gpgsign = true
+[gpg]
+	format = ssh
+[init]
+ 	defaultBranch = main
+[gpg "ssh"]
+	allowedSignersFile = /Users/dstotijn/.config/git/allowed_signers

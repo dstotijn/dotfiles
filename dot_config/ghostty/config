@@ -1,0 +1,5 @@
+font-size = 12
+theme = Everblush
+window-padding-x = 8
+window-padding-y = 8
+window-inherit-font-size = true
