@@ -3,3 +3,4 @@ theme = Everblush
 window-padding-x = 8
 window-padding-y = 8
 window-inherit-font-size = true
+adjust-cell-height = 6
