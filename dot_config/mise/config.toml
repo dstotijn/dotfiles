@@ -1,2 +1,7 @@
 [settings]
   experimental = true
+
+[tools]
+node = "lts"
+python = "latest"
+uv = "latest"
