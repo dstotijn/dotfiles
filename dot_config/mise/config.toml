@@ -3,5 +3,6 @@
 
 [tools]
 node = "lts"
+pre-commit = "latest"
 python = "latest"
 uv = "latest"
