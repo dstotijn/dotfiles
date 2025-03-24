@@ -1,7 +1,5 @@
 after-login-command = []
-after-startup-command = [
-  'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0'
-]
+after-startup-command = []
 start-at-login = true
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
@@ -31,7 +29,7 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 automatically-unhide-macos-hidden-apps = false
 
 [key-mapping]
-  preset = 'qwerty'
+preset = 'qwerty'
 
 # Gaps between windows (inner-*) and between monitor edges (outer-*).
 # Possible values:
@@ -42,153 +40,158 @@ automatically-unhide-macos-hidden-apps = false
 #                 See:
 #                 https://nikitabobko.github.io/AeroSpace/guide#assign-workspaces-to-monitors
 [gaps]
-  inner.horizontal = [{ monitor."built-in" = 6 }, 12]
-  inner.vertical = [{ monitor."built-in" = 6 }, 12]
-  outer.left = [{ monitor."built-in" = 6 }, 12]
-  outer.bottom = [{ monitor."built-in" = 6 }, 12]
-  outer.top = [{ monitor."built-in" = 6 }, 12]
-  outer.right = [{ monitor."built-in" = 6 }, 12]
+inner.horizontal = [{ monitor."built-in" = 6 }, 12]
+inner.vertical = [{ monitor."built-in" = 6 }, 12]
+outer.left = [{ monitor."built-in" = 6 }, 12]
+outer.bottom = [{ monitor."built-in" = 6 }, 12]
+outer.top = [{ monitor."built-in" = 6 }, 12]
+outer.right = [{ monitor."built-in" = 6 }, 12]
 
 [mode.main.binding]
-  # Layout
-  alt-f = 'layout floating tiling'
-  alt-slash = 'layout h_tiles vertical'
-  alt-a = 'layout v_accordion'
+# Layout
+alt-f = 'layout floating tiling'
+alt-slash = 'layout h_tiles vertical'
+alt-a = 'layout v_accordion'
+alt-shift-b = 'balance-sizes'
 
-  # Focus
-  alt-h = 'focus left --boundaries-action wrap-around-the-workspace'
-  alt-j = 'focus down --boundaries-action wrap-around-the-workspace'
-  alt-k = 'focus up --boundaries-action wrap-around-the-workspace'
-  alt-l = 'focus right --boundaries-action wrap-around-the-workspace'
-  alt-tab = 'workspace-back-and-forth'
-  alt-n = 'workspace prev'
-  alt-p = 'workspace next'
+# Focus
+alt-h = 'focus left --boundaries-action wrap-around-the-workspace'
+alt-j = 'focus down --boundaries-action wrap-around-the-workspace'
+alt-k = 'focus up --boundaries-action wrap-around-the-workspace'
+alt-l = 'focus right --boundaries-action wrap-around-the-workspace'
+alt-tab = 'workspace-back-and-forth'
 
-  # Movement
-  alt-shift-h = 'move left'
-  alt-shift-j = 'move down'
-  alt-shift-k = 'move up'
-  alt-shift-l = 'move right'
-  alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+# Movement
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
-  # Resizing
-  alt-minus = 'resize smart -50'
-  alt-equal = 'resize smart +50'
+# Resizing
+alt-minus = 'resize smart -50'
+alt-equal = 'resize smart +50'
 
-  # Workspace switching
-  alt-1 = 'workspace 1_programming'
-  alt-2 = 'workspace 2_terminal'
-  alt-3 = 'workspace 3_social'
-  alt-4 = 'workspace 4_productivity'
-  alt-5 = 'workspace 5'
-  alt-6 = 'workspace 6'
-  alt-7 = 'workspace 7'
-  alt-8 = 'workspace 8_ai'
-  alt-9 = 'workspace 9_utils'
-
-
-  # Workspace assignment
-  alt-shift-1 = 'move-node-to-workspace 1_programming'
-  alt-shift-2 = 'move-node-to-workspace 2_terminal'
-  alt-shift-3 = 'move-node-to-workspace 3_social'
-  alt-shift-4 = 'move-node-to-workspace 4_productivity'
-  alt-shift-5 = 'move-node-to-workspace 5'
-  alt-shift-6 = 'move-node-to-workspace 6'
-  alt-shift-7 = 'move-node-to-workspace 7'
-  alt-shift-8 = 'move-node-to-workspace 8_ai'
-  alt-shift-9 = 'move-node-to-workspace 9_utils'
+# Workspace switching
+alt-1 = 'workspace 1_browser'
+alt-2 = 'workspace 2_code'
+alt-3 = 'workspace 3_social'
+alt-4 = 'workspace 4_productivity'
+alt-5 = 'workspace 5_media'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8_ai'
+alt-9 = 'workspace 9_utils'
+alt-0 = 'workspace 0_terminal'
+alt-n = 'workspace prev'
+alt-p = 'workspace next'
 
 
-  alt-shift-semicolon = 'mode service'
+# Workspace assignment
+alt-shift-1 = 'move-node-to-workspace 1_browser'
+alt-shift-2 = 'move-node-to-workspace 2_code'
+alt-shift-3 = 'move-node-to-workspace 3_social'
+alt-shift-4 = 'move-node-to-workspace 4_productivity'
+alt-shift-5 = 'move-node-to-workspace 5_media'
+alt-shift-6 = 'move-node-to-workspace 6'
+alt-shift-7 = 'move-node-to-workspace 7'
+alt-shift-8 = 'move-node-to-workspace 8_ai'
+alt-shift-9 = 'move-node-to-workspace 9_utils'
+alt-shift-0 = 'move-node-to-workspace 0_terminal'
+
+alt-shift-semicolon = 'mode service'
 
 [mode.service.binding]
-  esc = ['reload-config', 'mode main']
-  r = ['flatten-workspace-tree', 'mode main']                # reset layout
-  backspace = ['close-all-windows-but-current', 'mode main']
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']                # reset layout
+backspace = ['close-all-windows-but-current', 'mode main']
 
-  alt-shift-h = ['join-with left', 'mode main']
-  alt-shift-j = ['join-with down', 'mode main']
-  alt-shift-k = ['join-with up', 'mode main']
-  alt-shift-l = ['join-with right', 'mode main']
-
-  down = 'volume down'
-  up = 'volume up'
-  shift-down = ['volume set 0', 'mode main']
+alt-shift-h = ['join-with left', 'mode main']
+alt-shift-j = ['join-with down', 'mode main']
+alt-shift-k = ['join-with up', 'mode main']
+alt-shift-l = ['join-with right', 'mode main']
 
 [workspace-to-monitor-force-assignment]
-  '1_programming' = 'main'
-  '2_terminal' = 'secondary'
-  '3_social' = 'secondary'
-  '4_productivity' = 'secondary'
-  5 = 'secondary'
-  6 = 'secondary'
-  7 = 'secondary'
-  '8_ai' = 'secondary'
-  '9_utils' = 'secondary'
+'1_browser' = 'main'
+'1_code' = 'main'
+'3_social' = 'secondary'
+'4_productivity' = 'secondary'
+'5_media' = 'secondary'
+6 = 'secondary'
+7 = 'secondary'
+'8_ai' = 'secondary'
+'9_utils' = 'secondary'
+'0_terminal' = 'secondary'
 
 [[on-window-detected]]
-  check-further-callbacks = true
-  run = 'layout floating'
+check-further-callbacks = true
+run = 'layout floating'
 
-# 1. Programming
+# 1. Browser
 [[on-window-detected]]
-  if.app-id = 'org.chromium.Chromium'
-  run = ['layout tiling', 'move-node-to-workspace 1_programming']
+if.app-id = 'org.chromium.Chromium'
+run = ['layout tiling', 'move-node-to-workspace 1_browser']
 
+# 2. code
 [[on-window-detected]]
-  if.app-id = 'com.todesktop.230313mzl4w4u92'
-  run = ['layout tiling', 'move-node-to-workspace 1_programming']
+if.app-id = 'com.todesktop.230313mzl4w4u92'
+run = ['layout tiling', 'move-node-to-workspace 2_code']
 
-  # 2. Terminal
 
+# 3. Social
 [[on-window-detected]]
-  if.app-id = 'com.mitchellh.ghostty'
-  run = ['layout tiling', 'move-node-to-workspace 2_terminal']
-
-  # 3. Social
-
-[[on-window-detected]]
-  if.app-id = 'com.apple.MobileSMS'
-  run = ['layout tiling', 'move-node-to-workspace 3_social']
+if.app-id = 'com.apple.MobileSMS'
+run = ['layout tiling', 'move-node-to-workspace 3_social']
 
 [[on-window-detected]]
-  if.app-id = 'com.tinyspeck.slackmacgap'
-  run = ['layout tiling', 'move-node-to-workspace 3_social']
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = ['layout tiling', 'move-node-to-workspace 3_social']
 
 [[on-window-detected]]
-  if.app-id = 'org.whispersystems.signal-desktop'
-  run = ['layout tiling', 'move-node-to-workspace 3_social']
+if.app-id = 'org.whispersystems.signal-desktop'
+run = ['layout tiling', 'move-node-to-workspace 3_social']
 
-  # 4. Productivity
+# 4. Productivity
+[[on-window-detected]]
+if.app-id = 'com.todoist.mac.Todoist'
+run = ['layout tiling', 'move-node-to-workspace 4_productivity']
 
 [[on-window-detected]]
-  if.app-id = 'com.todoist.mac.Todoist'
-  run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if.app-id = 'notion.id'
+run = ['layout tiling', 'move-node-to-workspace 4_productivity']
 
 [[on-window-detected]]
-  if.app-id = 'notion.id'
-  run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if.app-id = 'md.obsidian'
+run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+
+# 5. Media
+[[on-window-detected]]
+if.app-id = 'com.electron.pocket-casts'
+run = ['layout tiling', 'move-node-to-workspace 5_media']
 
 [[on-window-detected]]
-  if.app-id = 'md.obsidian'
-  run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if.app-id = 'com.apple.Music'
+run = ['layout tiling', 'move-node-to-workspace 5_media']
 
-  # 8. AI
+# 8. AI
+[[on-window-detected]]
+if.app-id = 'com.anthropic.claudefordesktop'
+run = ['layout tiling', 'move-node-to-workspace 8_ai']
+
+# 9. Utils
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
-  if.app-id = 'com.anthropic.claudefordesktop'
-  run = ['layout tiling', 'move-node-to-workspace 8_ai']
-
-  # 9. Utils
+if.app-id = 'com.1password.1password'
+run = ['move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
-  if.app-id = 'com.apple.finder'
-  run = ['layout tiling', 'move-node-to-workspace 9_utils']
+if.app-id = 'com.nordvpn.macos'
+run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
+# 0. Terminal
 [[on-window-detected]]
-  if.app-id = 'com.1password.1password'
-  run = ['layout tiling', 'move-node-to-workspace 9_utils']
-
-[[on-window-detected]]
-  if.app-id = 'com.nordvpn.macos'
-  run = ['layout tiling', 'move-node-to-workspace 9_utils']
+if.app-id = 'com.mitchellh.ghostty'
+run = ['layout tiling', 'move-node-to-workspace 0_terminal']
