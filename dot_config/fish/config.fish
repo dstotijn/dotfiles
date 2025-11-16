@@ -11,6 +11,7 @@ if status is-interactive
   abbr -a -- gac 'git add -A && git commit'
 end
 
+/opt/homebrew/bin/brew shellenv | source
 op completion fish | source
 
 if status is-interactive
