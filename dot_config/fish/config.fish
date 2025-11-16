@@ -11,7 +11,7 @@ if status is-interactive
   abbr -a -- gac 'git add -A && git commit'
 end
 
-source "$(brew --prefix)/share/google-cloud-sdk/path.fish.inc"
+op completion fish | source
 
 if status is-interactive
   mise activate fish | source
