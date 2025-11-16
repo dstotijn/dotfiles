@@ -22,3 +22,4 @@ end
 
 starship init fish | source
 zoxide init fish | source
+mcfly init fish | source
