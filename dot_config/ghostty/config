@@ -4,3 +4,6 @@ window-padding-x = 8
 window-padding-y = 8
 window-inherit-font-size = true
 adjust-cell-height = 6
+selection-background = "dim gray"
+copy-on-select = clipboard
+right-click-action = paste
