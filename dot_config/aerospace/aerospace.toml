@@ -185,7 +185,12 @@ run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
 if.app-id = 'com.1password.1password'
-run = ['move-node-to-workspace 9_utils']
+if.window-title-regex-substring = '(Quick Access|Unlock 1Password|Touch ID|1Password Browser Extension)'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.1password.1password'
+run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
 if.app-id = 'com.nordvpn.macos'
