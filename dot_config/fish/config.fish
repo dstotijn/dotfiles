@@ -19,3 +19,5 @@ if status is-interactive
 else
   mise activate fish --shims | source
 end
+
+starship init fish | source
