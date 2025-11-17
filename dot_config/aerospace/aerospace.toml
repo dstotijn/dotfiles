@@ -185,7 +185,7 @@ run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
 if.app-id = 'com.1password.1password'
-if.window-title-regex-substring = '(Quick Access|Unlock 1Password|Touch ID|1Password Browser Extension)'
+if.window-title-regex-substring = '(Quick Access|1Password)'
 run = ['layout floating']
 
 [[on-window-detected]]
