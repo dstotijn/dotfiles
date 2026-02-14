@@ -9,7 +9,11 @@ if status is-interactive
   abbr -a -- gco 'git checkout'
   abbr -a -- gp 'git push'
   abbr -a -- gac 'git add -A && git commit'
+
+  abbr -a oc 'set -gx OPENROUTER_API_KEY (op read "op://Private/ymlfds7jrnj3opetd3k7bqei6i/credential"); opencode'
 end
+
+fish_add_path ~/.local/bin
 
 /opt/homebrew/bin/brew shellenv | source
 op completion fish | source
