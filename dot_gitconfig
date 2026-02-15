@@ -1,6 +1,11 @@
 [core]
 	excludesfile = ~/.gitignore
 	editor = nvim
+	pager = delta
+[delta]
+	navigate = true
+	dark = true
+	line-numbers = true
 [user]
 	name = David Stotijn
 	email = dstotijn@gmail.com
@@ -12,6 +17,17 @@
 [gpg]
 	format = ssh
 [init]
- 	defaultBranch = main
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[pull]
+	rebase = true
+[rerere]
+	enabled = true
+[diff]
+	algorithm = histogram
+	colorMoved = default
+[merge]
+	conflictstyle = zdiff3
 [gpg "ssh"]
 	allowedSignersFile = /Users/dstotijn/.config/git/allowed_signers

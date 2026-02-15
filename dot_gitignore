@@ -1,0 +1,15 @@
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+.env
+.env.local

@@ -1,14 +1,28 @@
+set -g fish_greeting
+
+set -gx EDITOR nvim
+set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --follow --exclude .git"
+set -gx FZF_DEFAULT_OPTS "--height 40% --layout=reverse --border"
+set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
+set -gx MCFLY_RESULTS 40
+set -gx MCFLY_FUZZY 2
+
 if status is-interactive
   abbr -a -- cz chezmoi
   abbr -a -- gpf 'git push --force-with-lease'
   abbr -a -- gst 'git status'
   abbr -a -- gcb 'git checkout -b'
   abbr -a -- gd 'git diff'
-  abbr -a -- gpsup 'git push --set-upstream origin $(git branch --show-current)'
   abbr -a -- gup 'git pull --rebase'
   abbr -a -- gco 'git checkout'
   abbr -a -- gp 'git push'
   abbr -a -- gac 'git add -A && git commit'
+  abbr -a -- lg lazygit
+  abbr -a -- cat bat
+  abbr -a -- ls eza
+  abbr -a -- la 'eza -la'
+  abbr -a -- ll 'eza -l'
+  abbr -a -- lt 'eza --tree --level=2'
 
   abbr -a oc 'set -gx OPENROUTER_API_KEY (op read "op://Private/ymlfds7jrnj3opetd3k7bqei6i/credential"); opencode'
 end
