@@ -61,11 +61,6 @@ alt-k = 'focus up --boundaries-action wrap-around-the-workspace'
 alt-l = 'focus right --boundaries-action wrap-around-the-workspace'
 alt-tab = 'workspace-back-and-forth'
 
-# Movement
-alt-shift-h = 'move left'
-alt-shift-j = 'move down'
-alt-shift-k = 'move up'
-alt-shift-l = 'move right'
 alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
 # Resizing
@@ -106,6 +101,13 @@ esc = ['reload-config', 'mode main']
 r = ['flatten-workspace-tree', 'mode main']                # reset layout
 backspace = ['close-all-windows-but-current', 'mode main']
 
+# Move windows
+h = ['move left', 'mode main']
+j = ['move down', 'mode main']
+k = ['move up', 'mode main']
+l = ['move right', 'mode main']
+
+# Join windows
 alt-shift-h = ['join-with left', 'mode main']
 alt-shift-j = ['join-with down', 'mode main']
 alt-shift-k = ['join-with up', 'mode main']

@@ -22,3 +22,4 @@ uv = "0.10.2"
 "ubi:cantino/mcfly" = "0.9.4"
 "ubi:BurntSushi/ripgrep" = { version = "15.1.0", exe = "rg" }
 "ubi:cli/cli" = { version = "v2.86.0", exe = "gh" }
+tmux = "3.6a"

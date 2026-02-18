@@ -7,3 +7,5 @@ adjust-cell-height = 6
 selection-background = "dim gray"
 copy-on-select = clipboard
 right-click-action = paste
+macos-option-as-alt = left
+keybind = cmd+k=text:\x1b[24;2~
