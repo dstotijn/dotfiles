@@ -4,4 +4,13 @@
 # Brewfile hash: {{ include "Brewfile" | sha256sum }}
 
 brew bundle --file {{ joinPath .chezmoi.sourceDir "Brewfile" | quote }} --no-upgrade
+
+# Set fish as default shell
+FISH_PATH="$(brew --prefix)/bin/fish"
+if ! grep -qxF "$FISH_PATH" /etc/shells; then
+    echo "$FISH_PATH" | sudo tee -a /etc/shells
+fi
+if [ "$SHELL" != "$FISH_PATH" ]; then
+    chsh -s "$FISH_PATH"
+fi
 {{ end -}}

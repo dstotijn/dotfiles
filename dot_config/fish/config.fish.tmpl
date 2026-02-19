@@ -23,15 +23,17 @@ if status is-interactive
   abbr -a -- la 'eza -la'
   abbr -a -- ll 'eza -l'
   abbr -a -- lt 'eza --tree --level=2'
+{{- if eq .chezmoi.os "darwin" }}
 
   abbr -a oc 'set -gx OPENROUTER_API_KEY (op read "op://Private/ymlfds7jrnj3opetd3k7bqei6i/credential"); opencode'
+{{- end }}
 end
 
 fish_add_path ~/.local/bin
-
-/opt/homebrew/bin/brew shellenv | source
+{{ if eq .chezmoi.os "darwin" }}
+{{ output "brew" "--prefix" | trim }}/bin/brew shellenv | source
 op completion fish | source
-
+{{ end }}
 if status is-interactive
   mise activate fish | source
 else

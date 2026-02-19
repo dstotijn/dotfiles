@@ -4,7 +4,7 @@ Config managment via [chezmoi](https://www.chezmoi.io/).
 
 ## Installation
 
-On a fresh macOS installation:
+### macOS
 
 1. Install Homebrew:
 
@@ -12,11 +12,19 @@ On a fresh macOS installation:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-2. Install chezmoi and apply this source directory:
+2. Install chezmoi and apply:
 
 ```
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply dstotijn
 ```
+
+### Linux (Debian-based)
+
+```
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply dstotijn
+```
+
+The Linux install script handles apt packages, tool installers, and setting fish as the default shell.
 
 ## Chezmoi Conventions
 
@@ -41,18 +49,21 @@ chezmoi cd                 # Open shell in source directory
 | Component | Source Path | Purpose |
 |-----------|------------|---------|
 | Brewfile | `Brewfile` | Homebrew packages, casks, and taps |
-| Fish shell | `dot_config/fish/config.fish` | Shell config, abbreviations, tool integrations |
+| Fish shell | `dot_config/fish/config.fish.tmpl` | Shell config, abbreviations, tool integrations (OS-conditional) |
 | Neovim | `dot_config/nvim/` | AstroNvim v4+ with Lazy.nvim, Kanagawa theme |
 | AeroSpace | `dot_config/aerospace/aerospace.toml` | Tiling window manager with semantic workspaces |
 | Ghostty | `dot_config/ghostty/config` | Terminal emulator (Everblush theme, JetBrains Mono) |
-| Git | `dot_gitconfig` | SSH signing, neovim editor |
+| Git | `dot_gitconfig.tmpl` | SSH signing, neovim editor (templated home dir paths) |
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
-| Mise | `dot_config/mise/config.toml` | Runtime version manager (Node, Python, uv, pre-commit) |
+| Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |
+| Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 
 ## Run Scripts (Execution Order)
 
-1. `run_onchange_00_homebrew-install.sh.tmpl` — Runs `brew bundle` when Brewfile changes
-2. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
+1. `run_onchange_00_homebrew-install.sh.tmpl` — (macOS) Runs `brew bundle`, sets fish as default shell
+2. `run_onchange_00_linux-install.sh.tmpl` — (Linux) Installs apt packages, CLI tools, mise, Go tools, mcfly; sets fish as default shell
+3. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
+4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
 
 These are Go templates that embed a hash of their dependency file to trigger re-execution on change.
 
@@ -62,4 +73,4 @@ Based on AstroNvim v4 template. Most plugin configs under `dot_config/nvim/lua/p
 
 ## Fish Shell Integrations
 
-The fish config (`dot_config/fish/config.fish`) initializes several tools in order: Homebrew → 1Password SSH agent → mise → starship → zoxide → mcfly. Git abbreviations are defined there (gp, gd, gco, gst, etc.).
+The fish config (`dot_config/fish/config.fish.tmpl`) initializes tools in order: Homebrew (macOS only) → 1Password CLI (macOS only) → mise → starship → zoxide → mcfly. Git abbreviations are defined there (gp, gd, gco, gst, etc.).

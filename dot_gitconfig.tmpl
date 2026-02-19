@@ -9,7 +9,7 @@
 [user]
 	name = David Stotijn
 	email = dstotijn@gmail.com
-	signingkey = /Users/dstotijn/.ssh/id_ed25519.pub
+	signingkey = {{ .chezmoi.homeDir }}/.ssh/id_ed25519.pub
 [commit]
 	gpgsign = true
 [tag]
@@ -30,4 +30,4 @@
 [merge]
 	conflictstyle = zdiff3
 [gpg "ssh"]
-	allowedSignersFile = /Users/dstotijn/.config/git/allowed_signers
+	allowedSignersFile = {{ .chezmoi.homeDir }}/.config/git/allowed_signers

@@ -1,0 +1,94 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+# Install system packages
+packages=(
+    bat
+    eza
+    fd-find
+    fish
+    fzf
+    gh
+    git-delta
+    htop
+    jq
+    neovim
+    ripgrep
+    tmux
+    tree
+    zoxide
+)
+
+missing=()
+for pkg in "${packages[@]}"; do
+    if ! dpkg -s "$pkg" &>/dev/null; then
+        missing+=("$pkg")
+    fi
+done
+
+if [ ${#missing[@]} -gt 0 ]; then
+    echo "Installing packages: ${missing[*]}"
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq "${missing[@]}"
+fi
+
+# Create symlinks for Debian-renamed binaries
+if command -v batcat &>/dev/null && ! command -v bat &>/dev/null; then
+    sudo ln -sf "$(command -v batcat)" /usr/local/bin/bat
+fi
+if command -v fdfind &>/dev/null && ! command -v fd &>/dev/null; then
+    sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+fi
+
+# Set fish as default shell
+FISH_PATH="$(command -v fish)"
+if ! grep -qxF "$FISH_PATH" /etc/shells; then
+    echo "$FISH_PATH" | sudo tee -a /etc/shells
+fi
+if [ "$SHELL" != "$FISH_PATH" ]; then
+    sudo chsh -s "$FISH_PATH" "$USER"
+fi
+
+# Ensure ~/.local/bin is in PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Install tools not in apt
+if ! command -v uv &>/dev/null; then
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+
+if ! command -v starship &>/dev/null; then
+    echo "Installing starship..."
+    curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"
+fi
+
+# Install mise (manages Go, Node, Python)
+if ! command -v mise &>/dev/null; then
+    echo "Installing mise..."
+    curl -fsSL https://mise.jdx.dev/install.sh | bash
+fi
+
+# Install mise tools
+# config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+mise install --yes || echo "Warning: some mise tools failed to install"
+
+# Install Go tools (Go is managed by mise)
+eval "$(mise activate bash --shims)"
+export GOBIN="$HOME/.local/bin"
+echo "Installing Go tools..."
+go install github.com/jesseduffield/lazygit@latest
+go install github.com/wagoodman/dive@latest
+go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
+# Install mcfly (prebuilt binary)
+if [ ! -f "$HOME/.local/bin/mcfly" ]; then
+    echo "Installing mcfly..."
+    MCFLY_VERSION="v0.9.4"
+    curl -LSfs "https://github.com/cantino/mcfly/releases/download/${MCFLY_VERSION}/mcfly-${MCFLY_VERSION}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp
+    install /tmp/mcfly "$HOME/.local/bin/mcfly"
+    rm -f /tmp/mcfly
+fi
+{{ end -}}

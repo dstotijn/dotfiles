@@ -4,22 +4,6 @@ experimental = true
 [tools]
 go = "1.26.0"
 node = "22.22.0"
-pre-commit = "4.3.0"
-python = "3.14.3"
-uv = "0.10.2"
 "npm:@tailwindcss/language-server" = "0.14.29"
 "npm:skills" = "1.3.9"
-"ubi:sharkdp/bat" = "0.26.1"
-"ubi:starship/starship" = "1.24.2"
-"ubi:sharkdp/fd" = "10.3.0"
-"ubi:ajeetdsouza/zoxide" = "0.9.9"
-"ubi:fullstorydev/grpcurl" = "1.9.3"
-"ubi:junegunn/fzf" = "0.67.0"
-"ubi:jqlang/jq" = "jq-1.8.1"
-"ubi:dandavison/delta" = "0.18.2"
-"ubi:jesseduffield/lazygit" = "0.59.0"
-"ubi:wagoodman/dive" = "0.13.1"
-"ubi:cantino/mcfly" = "0.9.4"
-"ubi:BurntSushi/ripgrep" = { version = "15.1.0", exe = "rg" }
-"ubi:cli/cli" = { version = "v2.86.0", exe = "gh" }
-tmux = "3.6a"
+python = "3.14.3"
