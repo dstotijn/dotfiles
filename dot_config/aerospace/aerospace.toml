@@ -134,9 +134,9 @@ run = 'layout floating'
 if.app-id = 'org.chromium.Chromium'
 run = ['layout tiling', 'move-node-to-workspace 1_browser']
 
-# 2. code
+# 2. Code
 [[on-window-detected]]
-if.app-id = 'com.todesktop.230313mzl4w4u92'
+if.app-id = 'com.microsoft.VSCode'
 run = ['layout tiling', 'move-node-to-workspace 2_code']
 
 
