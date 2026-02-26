@@ -1,0 +1,6 @@
+GitHub.github-vscode-theme
+asvetliakov.vscode-neovim
+hverlin.mise-vscode
+golang.Go
+eamodio.gitlens
+shd101wyy.markdown-preview-enhanced

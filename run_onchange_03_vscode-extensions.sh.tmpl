@@ -1,0 +1,9 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+# Extensions hash: {{ include "vscode-extensions.txt" | sha256sum }}
+
+while IFS= read -r ext; do
+    [ -n "$ext" ] && code --install-extension "$ext"
+done < {{ joinPath .chezmoi.sourceDir "vscode-extensions.txt" | quote }}
+{{ end -}}
