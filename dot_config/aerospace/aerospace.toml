@@ -172,7 +172,7 @@ if.app-id = 'com.electron.pocket-casts'
 run = ['layout tiling', 'move-node-to-workspace 5_media']
 
 [[on-window-detected]]
-if.app-id = 'com.apple.Music'
+if.app-id = 'com.spotify.client'
 run = ['layout tiling', 'move-node-to-workspace 5_media']
 
 # 8. AI
