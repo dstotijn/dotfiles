@@ -187,7 +187,7 @@ run = ['layout tiling', 'move-node-to-workspace 9_utils']
 
 [[on-window-detected]]
 if.app-id = 'com.1password.1password'
-if.window-title-regex-substring = '(Quick Access|1Password)'
+if.window-title-regex-substring = '(Quick Access|Lock Screen) — 1Password|^1Password$'
 run = ['layout floating']
 
 [[on-window-detected]]
