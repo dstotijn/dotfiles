@@ -1,35 +1,34 @@
 {
-    "workbench.startupEditor": "none",
-    "workbench.colorTheme": "GitHub Dark",
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "GitHub Dark",
 
-    "editor.fontFamily": "JetBrains Mono",
-    "editor.fontSize": 12,
-    "editor.fontLigatures": true,
-    "editor.rulers": [120],
+  "editor.fontFamily": "JetBrains Mono",
+  "editor.fontSize": 12,
+  "editor.fontLigatures": true,
+  "editor.rulers": [120],
 
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-    "editor.renderWhitespace": "trailing",
-    "editor.trimAutoWhitespace": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.renderWhitespace": "trailing",
+  "editor.trimAutoWhitespace": true,
 
-    "editor.minimap.enabled": false,
-    "editor.bracketPairColorization.enabled": true,
-    "editor.linkedEditing": true,
-    "editor.stickyScroll.enabled": true,
+  "editor.minimap.enabled": false,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.linkedEditing": true,
+  "editor.stickyScroll.enabled": true,
 
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
 
-    "gitlens.currentLine.enabled": true,
-    "gitlens.codeLens.enabled": false,
+  "gitlens.currentLine.enabled": true,
+  "gitlens.codeLens.enabled": false,
 
-    "chat.disableAIFeatures": true,
+  "diffEditor.renderSideBySide": false,
 
-    "diffEditor.renderSideBySide": false,
+  "editor.wordWrap": "off",
 
-    "editor.wordWrap": "off",
-
-    "security.workspace.trust.untrustedFiles": "open",
-    "security.workspace.trust.enabled": true
+  "security.workspace.trust.untrustedFiles": "open",
+  "security.workspace.trust.enabled": true,
+  "redhat.telemetry.enabled": false,
 }
