@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# {{ include "dot_claude/mcp-servers.json" | sha256sum }}
+
+CLAUDE_JSON="$HOME/.claude.json"
+
+MCP_SERVERS='{{ include "dot_claude/mcp-servers.json" }}'
+
+if [ ! -f "$CLAUDE_JSON" ]; then
+    echo '{}' > "$CLAUDE_JSON"
+fi
+
+jq --argjson servers "$MCP_SERVERS" '.mcpServers = (.mcpServers // {} | . * $servers)' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp" \
+    && mv "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+
+echo "Merged MCP servers into $CLAUDE_JSON"
