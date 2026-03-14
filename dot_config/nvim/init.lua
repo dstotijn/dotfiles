@@ -17,3 +17,7 @@ end
 
 require "lazy_setup"
 require "polish"
+
+vim.api.nvim_create_autocmd("VimLeave", {
+  command = "set guicursor=a:ver25-blinkon1",
+})
