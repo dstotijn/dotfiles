@@ -1,0 +1,32 @@
+# AGENTS.md
+
+Global instructions for AI coding agents.
+
+## Working Style
+
+- Understand the underlying goal before implementing — ask "why" if unclear
+- Challenge the proposed approach if a simpler or more correct solution exists
+- Push back when assumptions seem wrong
+- Surface relevant pitfalls, edge cases, or industry practices I might not be aware of
+
+## Scope Discipline
+
+- Only change what was asked for — don't refactor, "improve", or clean up surrounding code
+- Don't add comments, docstrings, or type annotations to code you didn't change
+- Don't add error handling or validation for scenarios that can't happen
+- A bug fix doesn't need the surrounding code reorganized
+
+## When Things Fail
+
+- If something fails, investigate the root cause — don't retry the same thing or suppress the error
+- After two failed attempts at the same approach, stop and reconsider the strategy
+- If blocked, say so — don't brute force
+
+## Security
+
+- Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.
+
+## Workflow
+
+- Don't commit until I've reviewed the changes
+- When I give a workflow or preference instruction, ask if I want it added to AGENTS.md for future sessions
