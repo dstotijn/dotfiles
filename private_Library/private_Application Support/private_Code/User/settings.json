@@ -24,11 +24,14 @@
   "gitlens.currentLine.enabled": true,
   "gitlens.codeLens.enabled": false,
 
+  "chat.disableAIFeatures": true,
+
   "diffEditor.renderSideBySide": false,
 
   "editor.wordWrap": "off",
 
   "security.workspace.trust.untrustedFiles": "open",
   "security.workspace.trust.enabled": true,
+  "scm.repositories.selectionMode": "single",
   "redhat.telemetry.enabled": false,
 }
