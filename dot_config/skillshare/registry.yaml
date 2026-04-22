@@ -37,3 +37,7 @@ skills:
     - name: grill-me
       source: github.com/mattpocock/skills/grill-me
       group: _mattpocock
+
+    # Vercel
+    - name: agent-browser
+      source: github.com/vercel-labs/agent-browser/skills/agent-browser
