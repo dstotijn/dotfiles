@@ -1,15 +1,55 @@
 #!/bin/bash
 
-# registry.yaml hash: {{ include "dot_config/skillshare/registry.yaml" | sha256sum }}
+# config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
 
-set -euo pipefail
+set -uo pipefail
 
-SKILLS_DIR="$HOME/.local/share/agent-skills"
-if [ ! -d "$SKILLS_DIR" ]; then
-    echo "Cloning agent-skills..."
-    git clone git@github.com:dstotijn/agent-skills.git "$SKILLS_DIR"
-fi
+install() {
+    mise exec -- skillshare install "$@" || true
+}
 
-echo "Installing and syncing skillshare skills..."
-mise exec -- skillshare install
+mkdir -p "$HOME/.local/share/skillshare/skills"
+
+# Anthropic
+install anthropics/skills/skills/pdf --into anthropic
+install anthropics/skills/skills/skill-creator --into anthropic
+install anthropics/skills/skills/frontend-design --into anthropic
+install anthropics/skills/skills/mcp-builder --into anthropic
+install anthropics/skills/skills/webapp-testing --into anthropic
+
+# Skillshare
+install runkids/skillshare/skills/skillshare --into skillshare
+
+# Google Workspace
+install googleworkspace/cli/skills/gws-sheets --into googleworkspace
+install googleworkspace/cli/skills/gws-sheets-append --into googleworkspace
+install googleworkspace/cli/skills/gws-sheets-read --into googleworkspace
+
+# Matt Pocock
+install mattpocock/skills/grill-me --into mattpocock
+
+# Vercel
+install vercel-labs/agent-browser/skills/agent-browser --into vercel
+
+# Superpowers
+install obra/superpowers/skills/brainstorming --into superpowers
+install obra/superpowers/skills/dispatching-parallel-agents --into superpowers
+install obra/superpowers/skills/executing-plans --into superpowers
+install obra/superpowers/skills/finishing-a-development-branch --into superpowers
+install obra/superpowers/skills/receiving-code-review --into superpowers
+install obra/superpowers/skills/requesting-code-review --into superpowers
+install obra/superpowers/skills/subagent-driven-development --into superpowers
+install obra/superpowers/skills/systematic-debugging --into superpowers
+install obra/superpowers/skills/test-driven-development --into superpowers
+install obra/superpowers/skills/using-superpowers --into superpowers
+install obra/superpowers/skills/verification-before-completion --into superpowers
+install obra/superpowers/skills/writing-plans --into superpowers
+install obra/superpowers/skills/writing-skills --into superpowers
+
+# Personal authored skills (from dstotijn/agent-skills)
+install dstotijn/agent-skills/skills/dev-preferences --into dstotijn
+install dstotijn/agent-skills/skills/go-dev --into dstotijn
+install dstotijn/agent-skills/skills/mise --into dstotijn
+
+echo "Syncing skillshare skills to targets..."
 mise exec -- skillshare sync
