@@ -3,6 +3,17 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh"
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "codex@openai-codex": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true
 }
