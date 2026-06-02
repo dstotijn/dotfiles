@@ -26,7 +26,7 @@ return {
       },
     },
     autocmds = {
-      restore_cursor = {
+      restore_cursor_shape = {
         {
           event = "VimLeave",
           desc = "Restore blinking bar cursor on exit",
