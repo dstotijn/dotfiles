@@ -1,4 +1,4 @@
-GitHub.github-vscode-theme
+Catppuccin.catppuccin-vsc
 asvetliakov.vscode-neovim
 hverlin.mise-vscode
 golang.Go

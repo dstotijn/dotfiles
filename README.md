@@ -50,9 +50,9 @@ chezmoi cd                 # Open shell in source directory
 |-----------|------------|---------|
 | Brewfile | `Brewfile` | Homebrew packages, casks, and taps |
 | Fish shell | `dot_config/fish/config.fish.tmpl` | Shell config, abbreviations, tool integrations (OS-conditional) |
-| Neovim | `dot_config/nvim/` | AstroNvim v4+ with Lazy.nvim, Kanagawa theme |
+| Neovim | `dot_config/nvim/` | AstroNvim v4+ with Lazy.nvim, Catppuccin Mocha theme |
 | AeroSpace | `dot_config/aerospace/aerospace.toml` | Tiling window manager with semantic workspaces |
-| Ghostty | `dot_config/ghostty/config` | Terminal emulator (Everblush theme, JetBrains Mono) |
+| Ghostty | `dot_config/ghostty/config` | Terminal emulator with Catppuccin Mocha theme |
 | Git | `dot_gitconfig.tmpl` | SSH signing, neovim editor (templated home dir paths) |
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
 | Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |
