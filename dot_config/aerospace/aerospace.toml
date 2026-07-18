@@ -1,6 +1,9 @@
+config-version = 2
+
 after-login-command = []
 after-startup-command = []
 start-at-login = true
+auto-reload-config = true
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
 enable-normalization-flatten-containers = true
@@ -28,6 +31,17 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 # Also see: https://nikitabobko.github.io/AeroSpace/goodies#disable-hide-app
 automatically-unhide-macos-hidden-apps = false
 
+persistent-workspaces = [
+  '0_terminal',
+  '1_browser',
+  '2_code',
+  '3_comms',
+  '4_productivity',
+  '5_media',
+  '8_ai',
+  '9_misc',
+]
+
 [key-mapping]
 preset = 'qwerty'
 
@@ -42,10 +56,10 @@ preset = 'qwerty'
 [gaps]
 inner.horizontal = [{ monitor."built-in" = 6 }, 12]
 inner.vertical = [{ monitor."built-in" = 6 }, 12]
-outer.left = [{ monitor."built-in" = 6 }, 12]
-outer.bottom = [{ monitor."built-in" = 6 }, 12]
-outer.top = [{ monitor."built-in" = 6 }, 12]
-outer.right = [{ monitor."built-in" = 6 }, 12]
+outer.left = 0
+outer.bottom = 0
+outer.top = 0
+outer.right = 0
 
 [mode.main.binding]
 # Layout
@@ -67,35 +81,32 @@ alt-equal = 'resize smart +50'
 # Workspace switching
 alt-1 = 'workspace 1_browser'
 alt-2 = 'workspace 2_code'
-alt-3 = 'workspace 3_social'
+alt-3 = 'workspace 3_comms'
 alt-4 = 'workspace 4_productivity'
 alt-5 = 'workspace 5_media'
-alt-6 = 'workspace 6'
-alt-7 = 'workspace 7'
 alt-8 = 'workspace 8_ai'
-alt-9 = 'workspace 9_utils'
+alt-9 = 'workspace 9_misc'
 alt-0 = 'workspace 0_terminal'
-alt-n = 'workspace prev'
-alt-p = 'workspace next'
+alt-tab = 'workspace-back-and-forth'
+alt-shift-tab = 'workspace prev'
 
 
 # Workspace assignment
 alt-shift-1 = 'move-node-to-workspace 1_browser'
 alt-shift-2 = 'move-node-to-workspace 2_code'
-alt-shift-3 = 'move-node-to-workspace 3_social'
+alt-shift-3 = 'move-node-to-workspace 3_comms'
 alt-shift-4 = 'move-node-to-workspace 4_productivity'
 alt-shift-5 = 'move-node-to-workspace 5_media'
-alt-shift-6 = 'move-node-to-workspace 6'
-alt-shift-7 = 'move-node-to-workspace 7'
 alt-shift-8 = 'move-node-to-workspace 8_ai'
-alt-shift-9 = 'move-node-to-workspace 9_utils'
+alt-shift-9 = 'move-node-to-workspace 9_misc'
 alt-shift-0 = 'move-node-to-workspace 0_terminal'
 
 alt-shift-semicolon = 'mode service'
 
 [mode.service.binding]
-esc = ['reload-config', 'mode main']
-r = ['flatten-workspace-tree', 'mode main']                # reset layout
+esc = 'mode main'
+r = ['reload-config', 'mode main']
+f = ['flatten-workspace-tree', 'mode main']                # reset layout
 backspace = ['close-all-windows-but-current', 'mode main']
 
 # Move windows
@@ -112,90 +123,96 @@ alt-shift-l = ['join-with right', 'mode main']
 
 [workspace-to-monitor-force-assignment]
 '1_browser' = 'main'
-'1_code' = 'main'
-'3_social' = 'secondary'
+'2_code' = 'main'
+'3_comms' = 'secondary'
 '4_productivity' = 'secondary'
 '5_media' = 'secondary'
-6 = 'secondary'
-7 = 'secondary'
 '8_ai' = 'secondary'
-'9_utils' = 'secondary'
+'9_misc' = 'secondary'
 '0_terminal' = 'secondary'
-
-[[on-window-detected]]
-check-further-callbacks = true
-run = 'layout floating'
 
 # 1. Browser
 [[on-window-detected]]
-if.app-id = 'org.chromium.Chromium'
-run = ['layout tiling', 'move-node-to-workspace 1_browser']
+if = 'test %{app-bundle-id} = org.chromium.Chromium'
+run = 'move-node-to-workspace 1_browser'
 
 # 2. Code
 [[on-window-detected]]
-if.app-id = 'com.microsoft.VSCode'
-run = ['layout tiling', 'move-node-to-workspace 2_code']
+if = 'test %{app-bundle-id} = com.microsoft.VSCode'
+run = 'move-node-to-workspace 2_code'
 
 
-# 3. Social
+# 3. Comms
 [[on-window-detected]]
-if.app-id = 'com.apple.MobileSMS'
-run = ['layout tiling', 'move-node-to-workspace 3_social']
-
-[[on-window-detected]]
-if.app-id = 'com.tinyspeck.slackmacgap'
-run = ['layout tiling', 'move-node-to-workspace 3_social']
+if = 'test %{app-bundle-id} = com.apple.MobileSMS'
+run = 'move-node-to-workspace 3_comms'
 
 [[on-window-detected]]
-if.app-id = 'org.whispersystems.signal-desktop'
-run = ['layout tiling', 'move-node-to-workspace 3_social']
+if = 'test %{app-bundle-id} = com.tinyspeck.slackmacgap'
+run = 'move-node-to-workspace 3_comms'
+
+[[on-window-detected]]
+if = 'test %{app-bundle-id} = org.whispersystems.signal-desktop'
+run = 'move-node-to-workspace 3_comms'
 
 # 4. Productivity
 [[on-window-detected]]
-if.app-id = 'com.todoist.mac.Todoist'
-run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if = 'test %{app-bundle-id} = com.todoist.mac.Todoist'
+run = 'move-node-to-workspace 4_productivity'
 
 [[on-window-detected]]
-if.app-id = 'notion.id'
-run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if = 'test %{app-bundle-id} = notion.id'
+run = 'move-node-to-workspace 4_productivity'
 
 [[on-window-detected]]
-if.app-id = 'md.obsidian'
-run = ['layout tiling', 'move-node-to-workspace 4_productivity']
+if = 'test %{app-bundle-id} = md.obsidian'
+run = 'move-node-to-workspace 4_productivity'
 
 # 5. Media
 [[on-window-detected]]
-if.app-id = 'com.electron.pocket-casts'
-run = ['layout tiling', 'move-node-to-workspace 5_media']
+if = 'test %{app-bundle-id} = com.electron.pocket-casts'
+run = 'move-node-to-workspace 5_media'
 
 [[on-window-detected]]
-if.app-id = 'com.spotify.client'
-run = ['layout tiling', 'move-node-to-workspace 5_media']
+if = 'test %{app-bundle-id} = com.spotify.client'
+run = 'move-node-to-workspace 5_media'
 
 # 8. AI
 [[on-window-detected]]
-if.app-id = 'com.anthropic.claudefordesktop'
-run = ['layout tiling', 'move-node-to-workspace 8_ai']
-
-# 9. Utils
-[[on-window-detected]]
-if.app-id = 'com.apple.finder'
-run = ['layout tiling', 'move-node-to-workspace 9_utils']
+if = 'test %{app-bundle-id} = com.anthropic.claudefordesktop'
+run = 'move-node-to-workspace 8_ai'
 
 [[on-window-detected]]
-if.app-id = 'com.1password.1password'
-if.window-title-regex-substring = '(Quick Access|Lock Screen) — 1Password|^1Password$'
-run = ['layout floating']
+if = 'test %{app-bundle-id} = com.openai.codex'
+run = 'move-node-to-workspace 8_ai'
+
+# 9. Misc
+[[on-window-detected]]
+if = 'test %{app-bundle-id} = com.apple.finder'
+run = 'move-node-to-workspace 9_misc'
 
 [[on-window-detected]]
-if.app-id = 'com.1password.1password'
-run = ['layout tiling', 'move-node-to-workspace 9_utils']
+if = "test %{app-bundle-id} = com.1password.1password && test %{window-title} ~= '(Quick Access|Lock Screen) — 1Password|^1Password$'"
+run = 'layout floating'
 
 [[on-window-detected]]
-if.app-id = 'com.nordvpn.macos'
-run = ['layout tiling', 'move-node-to-workspace 9_utils']
+if = 'test %{app-bundle-id} = com.1password.1password'
+run = 'move-node-to-workspace 9_misc'
+
+[[on-window-detected]]
+if = 'test %{app-bundle-id} = com.nordvpn.macos'
+run = 'move-node-to-workspace 9_misc'
+
+[[on-window-detected]]
+if = 'test %{app-bundle-id} = com.Replacicon.Replacicon'
+run = 'move-node-to-workspace 9_misc'
 
 # 0. Terminal
 [[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty'
-run = ['layout tiling', 'move-node-to-workspace 0_terminal']
+if = 'test %{app-bundle-id} = com.mitchellh.ghostty'
+run = 'move-node-to-workspace 0_terminal'
+
+# Fallback
+[[on-window-detected]]
+if = 'true'
+run = 'move-node-to-workspace 9_misc'
