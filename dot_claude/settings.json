@@ -16,5 +16,6 @@
   },
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
+  "autoMemoryEnabled": false,
   "tui": "fullscreen"
 }
