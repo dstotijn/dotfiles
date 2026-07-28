@@ -30,4 +30,8 @@ Global instructions for AI coding agents.
 ## Security
 
 - Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.
+{{- if stat (joinPath .chezmoi.sourceDir ".AGENTS.local.md") }}
+
+{{ include ".AGENTS.local.md" | trim }}
+{{- end }}
 

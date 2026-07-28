@@ -33,6 +33,7 @@ The Linux install script handles apt packages, tool installers, and setting fish
 - `.tmpl` suffix means the file is a Go template rendered by chezmoi
 - `run_onchange_` scripts execute when their template-hashed content changes
 - `.chezmoiignore` excludes files from being applied to the target directory
+- Dot-prefixed entries in the source root (e.g. `.gitignore`, `.AGENTS.local.md`) are never applied as targets; chezmoi reserves that namespace for itself
 
 ## Common Commands
 
@@ -57,6 +58,34 @@ chezmoi cd                 # Open shell in source directory
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
 | Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |
 | Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
+| AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
+
+## AI Agent Instructions
+
+`dot_config/AGENTS.md.tmpl` renders to `~/.config/AGENTS.md`, which three harnesses read through symlinks:
+
+| Target | Source path |
+|--------|-------------|
+| `~/.claude/CLAUDE.md` | `dot_claude/symlink_CLAUDE.md.tmpl` |
+| `~/.codex/AGENTS.md` | `dot_codex/symlink_AGENTS.md.tmpl` |
+| `~/.config/opencode/AGENTS.md` | `dot_config/opencode/symlink_AGENTS.md.tmpl` |
+
+### Machine-local instructions
+
+`.AGENTS.local.md` in the source root holds instructions for the current machine only. It is gitignored, so it never leaves the machine, and chezmoi never applies it as a target because dot-prefixed source entries are ignored. `dot_config/AGENTS.md.tmpl` appends its contents when the file exists:
+
+```
+{{- if stat (joinPath .chezmoi.sourceDir ".AGENTS.local.md") }}
+
+{{ include ".AGENTS.local.md" | trim }}
+{{- end }}
+```
+
+Run `chezmoi apply` after editing it, since the rendered file is not a symlink. Notes:
+
+- The `stat` guard means a machine without the file renders the shared instructions byte-identical to before, so a fresh clone needs no setup.
+- `include` inserts the file literally, so `{{ }}` in local notes is not interpreted as template syntax.
+- Content lands in the shared file rather than a per-harness file because Codex reads exactly one global instruction file (`~/.codex/AGENTS.override.md` if present, otherwise `~/.codex/AGENTS.md`) and has no import syntax. Claude Code alone could instead use `~/.claude/rules/`.
 
 ## Run Scripts (Execution Order)
 
