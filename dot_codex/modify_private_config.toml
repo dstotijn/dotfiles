@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# Enforce Codex's global no-approval, full-access defaults without managing the whole config.
+# Codex also stores machine-specific state here, which this partial-file modifier preserves.
+
+awk '
+function add_missing_settings() {
+    missing_settings = !approval_policy_set || !sandbox_mode_set
+    if (!approval_policy_set) {
+        print "approval_policy = \"never\""
+    }
+    if (!sandbox_mode_set) {
+        print "sandbox_mode = \"danger-full-access\""
+    }
+    if (missing_settings) {
+        print ""
+    }
+    settings_added = 1
+}
+
+in_root && /^approval_policy[[:space:]]*=/ {
+    print "approval_policy = \"never\""
+    approval_policy_set = 1
+    next
+}
+
+in_root && /^sandbox_mode[[:space:]]*=/ {
+    print "sandbox_mode = \"danger-full-access\""
+    sandbox_mode_set = 1
+    next
+}
+
+in_root && /^[[:space:]]*\[/ {
+    add_missing_settings()
+    in_root = 0
+}
+
+{ print }
+
+END {
+    if (in_root && !settings_added) {
+        add_missing_settings()
+    }
+}
+' in_root=1
