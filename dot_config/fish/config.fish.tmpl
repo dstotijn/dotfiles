@@ -16,6 +16,13 @@ set -gx RIPGREP_CONFIG_PATH ~/.config/ripgrep/config
 set -gx MCFLY_RESULTS 40
 set -gx MCFLY_FUZZY 2
 
+# tmux forces TERM_PROGRAM=tmux in every pane, hiding the real terminal from
+# capability detection (Claude Code's progress bar and desktop notifications).
+# Programs that need to know they're in tmux can still check $TMUX.
+if set -q TMUX; and set -q GHOSTTY_RESOURCES_DIR
+  set -gx TERM_PROGRAM ghostty
+end
+
 if status is-interactive
   abbr -a -- ccc claude
   abbr -a -- cz chezmoi
