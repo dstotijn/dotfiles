@@ -3,6 +3,20 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh"
   },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+    ],
+    "Notification": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+    ]
+  },
   "enabledPlugins": {
     "codex@openai-codex": true
   },
