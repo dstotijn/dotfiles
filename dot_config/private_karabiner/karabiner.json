@@ -12,7 +12,7 @@
                 },
                 "rules": [
                     {
-                        "description": "Double-tap Caps Lock → Ctrl+Space (tmux prefix)",
+                        "description": "Hold Caps Lock → Hyper; double-tap → Ctrl+Space (tmux prefix)",
                         "manipulators": [
                             {
                                 "type": "basic",
@@ -34,7 +34,12 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
-                                    { "set_variable": { "name": "double_tap_caps", "value": 1 } }
+                                    { "set_variable": { "name": "double_tap_caps", "value": 1 } },
+                                    {
+                                        "key_code": "left_shift",
+                                        "modifiers": ["left_command", "left_control", "left_option"],
+                                        "lazy": true
+                                    }
                                 ],
                                 "to_delayed_action": {
                                     "to_if_invoked": [

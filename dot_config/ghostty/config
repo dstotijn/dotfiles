@@ -11,3 +11,9 @@ copy-on-select = clipboard
 right-click-action = paste
 macos-option-as-alt = left
 keybind = cmd+k=text:\x1b[24;2~
+keybind = ctrl+alt+shift+super+j=text:\x1b[1;2P
+keybind = ctrl+alt+shift+super+k=text:\x1b[1;2Q
+keybind = ctrl+alt+shift+super+n=text:\x1b[1;2R
+keybind = ctrl+alt+shift+super+p=text:\x1b[1;2S
+keybind = ctrl+alt+shift+super+h=text:\x1b[15;2~
+keybind = ctrl+alt+shift+super+l=text:\x1b[17;2~
