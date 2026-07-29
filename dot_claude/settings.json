@@ -17,5 +17,6 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "autoMemoryEnabled": false,
+  "preferredNotifChannel": "ghostty",
   "tui": "fullscreen"
 }
