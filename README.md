@@ -53,7 +53,7 @@ chezmoi cd                 # Open shell in source directory
 | Fish shell | `dot_config/fish/config.fish.tmpl` | Shell config, abbreviations, tool integrations (OS-conditional) |
 | Neovim | `dot_config/nvim/` | AstroNvim v4+ with Lazy.nvim, Catppuccin Mocha theme |
 | AeroSpace | `dot_config/aerospace/aerospace.toml` | Tiling window manager with semantic workspaces |
-| Ghostty | `dot_config/ghostty/config` | Terminal emulator with Catppuccin Mocha theme |
+| Ghostty | `dot_config/ghostty/config`, `private_dot_terminfo/` | Terminal config; installs `xterm-ghostty` terminfo for Linux SSH hosts |
 | Git | `dot_gitconfig.tmpl` | SSH signing, neovim editor (templated home dir paths) |
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
 | Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |

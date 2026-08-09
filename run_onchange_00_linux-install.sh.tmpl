@@ -14,6 +14,7 @@ packages=(
     git-delta
     htop
     jq
+    ncurses-bin
     neovim
     ripgrep
     tmux
@@ -51,6 +52,10 @@ if [ "$SHELL" != "$FISH_PATH" ]; then
     sudo chsh -s "$FISH_PATH" "$USER"
 fi
 
+# Compile Ghostty's terminal definition for SSH sessions from Ghostty. The
+# source is managed at ~/.terminfo; the compiled entry remains user-scoped.
+tic -x -o "$HOME/.terminfo" "$HOME/.terminfo/xterm-ghostty.terminfo"
+
 # Ensure ~/.local/bin is in PATH
 export PATH="$HOME/.local/bin:$PATH"
 
@@ -73,6 +78,7 @@ fi
 
 # Install mise tools
 # config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+# terminfo hash: {{ include "private_dot_terminfo/xterm-ghostty.terminfo" | sha256sum }}
 mise install --yes || echo "Warning: some mise tools failed to install"
 
 # Install Go tools (Go is managed by mise)
