@@ -62,13 +62,14 @@ chezmoi cd                 # Open shell in source directory
 
 ## AI Agent Instructions
 
-`dot_config/AGENTS.md.tmpl` renders to `~/.config/AGENTS.md`, which three harnesses read through symlinks:
+`dot_config/AGENTS.md.tmpl` renders to `~/.config/AGENTS.md`, which four harnesses read through symlinks:
 
 | Target | Source path |
 |--------|-------------|
 | `~/.claude/CLAUDE.md` | `dot_claude/symlink_CLAUDE.md.tmpl` |
 | `~/.codex/AGENTS.md` | `dot_codex/symlink_AGENTS.md.tmpl` |
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/symlink_AGENTS.md.tmpl` |
+| `~/.pi/agent/AGENTS.md` | `dot_pi/agent/symlink_AGENTS.md.tmpl` |
 
 ### Machine-local instructions
 
