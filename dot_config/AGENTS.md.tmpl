@@ -30,8 +30,14 @@ Global instructions for AI coding agents.
 ## Security
 
 - Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.
+
+## Work Log
+
+- Keep a `tmp/WORKLOG.md` (relative to the repo root) with a running log of work done, decisions made, and open threads
+- At the start of a new session, read `tmp/WORKLOG.md` first if it exists, before starting work
+- Update it as work progresses, not just at the end of a session
+
 {{- if stat (joinPath .chezmoi.sourceDir ".AGENTS.local.md") }}
 
 {{ include ".AGENTS.local.md" | trim }}
 {{- end }}
-
