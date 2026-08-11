@@ -1,5 +1,6 @@
 Brewfile
 README.md
+AGENTS.md
 .claude/mcp-servers.json
 
 {{- if ne .chezmoi.os "linux" }}
