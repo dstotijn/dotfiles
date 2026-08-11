@@ -16,17 +16,6 @@ Global instructions for AI coding agents.
 - Don't add error handling or validation for scenarios that can't happen
 - A bug fix doesn't need the surrounding code reorganized
 
-## Comments
-
-- Comments may capture design decisions or rationale when it helps explain the code — but distill it in your own words, don't paste in chunks copied from a PRD or design doc
-- Never reference internal design docs in comments: no doc titles, links, or chapter/section/paragraph numbers (e.g. avoid "per design doc §3.2" or "see RFC chapter 4")
-
-## When Things Fail
-
-- If something fails, investigate the root cause — don't retry the same thing or suppress the error
-- After two failed attempts at the same approach, stop and reconsider the strategy
-- If blocked, say so — don't brute force
-
 ## Security
 
 - Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.
