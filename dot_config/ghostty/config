@@ -17,3 +17,12 @@ keybind = ctrl+alt+shift+super+n=text:\x1b[1;2R
 keybind = ctrl+alt+shift+super+p=text:\x1b[1;2S
 keybind = ctrl+alt+shift+super+h=text:\x1b[15;2~
 keybind = ctrl+alt+shift+super+l=text:\x1b[17;2~
+keybind = ctrl+alt+shift+super+m=text:\x1b[18;2~
+keybind = ctrl+alt+shift+super+o=text:\x1b[19;2~
+# Splits. Letters only: Hyper carries shift, and on macOS a punctuation key
+# still reports its shifted character, so `slash` never matches (the event reads
+# as `?`) and `>` is rejected by the parser outright. Letters survive because
+# Ghostty case-folds `I` back to `i`. The same applies to digits, which shift to
+# `!@#$...`, so a Hyper+1..9 scheme would not work either.
+keybind = ctrl+alt+shift+super+i=text:\x1b[20;2~
+keybind = ctrl+alt+shift+super+u=text:\x1b[21;2~
