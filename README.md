@@ -33,6 +33,7 @@ The Linux install script handles apt packages, tool installers, and setting fish
 - `.tmpl` suffix means the file is a Go template rendered by chezmoi
 - `run_onchange_` scripts execute when their template-hashed content changes
 - `.chezmoiignore` excludes files from being applied to the target directory
+- `.chezmoiremove` lists targets chezmoi should delete, for retiring a file that was once managed
 - Dot-prefixed entries in the source root (e.g. `.gitignore`, `.AGENTS.local.md`) are never applied as targets; chezmoi reserves that namespace for itself
 
 ## Common Commands
