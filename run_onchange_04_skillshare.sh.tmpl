@@ -10,6 +10,9 @@ install() {
 
 mkdir -p "$HOME/.local/share/skillshare/skills"
 
+# Retired upstream: renamed to productivity/writing-for-agents, not adopted.
+mise exec -- skillshare uninstall writing-great-skills --force || true
+
 # Anthropic
 install anthropics/skills/skills/pdf --into anthropic
 install anthropics/skills/skills/skill-creator --into anthropic
@@ -29,19 +32,28 @@ install googleworkspace/cli/skills/gws-sheets-append --into googleworkspace
 install googleworkspace/cli/skills/gws-sheets-read --into googleworkspace
 
 # Matt Pocock
-install mattpocock/skills/skills/productivity/grill-me --into mattpocock
-install mattpocock/skills/skills/productivity/handoff --into mattpocock
-install mattpocock/skills/skills/productivity/writing-great-skills --into mattpocock
+install mattpocock/skills/skills/engineering/ask-matt --into mattpocock
+install mattpocock/skills/skills/engineering/codebase-design --into mattpocock
 install mattpocock/skills/skills/engineering/diagnosing-bugs --into mattpocock
+install mattpocock/skills/skills/engineering/domain-modeling --into mattpocock
 install mattpocock/skills/skills/engineering/grill-with-docs --into mattpocock
 install mattpocock/skills/skills/engineering/implement --into mattpocock
 install mattpocock/skills/skills/engineering/improve-codebase-architecture --into mattpocock
+install mattpocock/skills/skills/engineering/prototype --into mattpocock
+install mattpocock/skills/skills/engineering/research --into mattpocock
 install mattpocock/skills/skills/engineering/setup-matt-pocock-skills --into mattpocock
 install mattpocock/skills/skills/engineering/tdd --into mattpocock
-install mattpocock/skills/skills/engineering/to-tickets --into mattpocock
 install mattpocock/skills/skills/engineering/to-spec --into mattpocock
+install mattpocock/skills/skills/engineering/to-tickets --into mattpocock
 install mattpocock/skills/skills/engineering/triage --into mattpocock
 install mattpocock/skills/skills/engineering/wayfinder --into mattpocock
+install mattpocock/skills/skills/engineering/wizard --into mattpocock
+install mattpocock/skills/skills/productivity/grill-me --into mattpocock
+install mattpocock/skills/skills/productivity/grilling --into mattpocock
+install mattpocock/skills/skills/productivity/handoff --into mattpocock
+install mattpocock/skills/skills/productivity/teach --into mattpocock
+install mattpocock/skills/skills/productivity/to-questionnaire --into mattpocock
+install mattpocock/skills/skills/productivity/wait-what --into mattpocock
 
 # Vercel
 install vercel-labs/agent-browser/skills/agent-browser --into vercel
@@ -52,6 +64,12 @@ install dstotijn/agent-skills/skills/go-dev --into dstotijn
 install dstotijn/agent-skills/skills/mise --into dstotijn
 install dstotijn/agent-skills/skills/peer-consult --into dstotijn
 install dstotijn/agent-skills/skills/plain-english --into dstotijn
+
+# `install` is a no-op for a skill that already exists, so pull upstream
+# changes separately. `update` reinstalls from stored source metadata and
+# keeps the audit gate, unlike `install --force`.
+echo "Updating installed skills..."
+mise exec -- skillshare update --all || true
 
 echo "Syncing skillshare skills to targets..."
 mise exec -- skillshare sync
