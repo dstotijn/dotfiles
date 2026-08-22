@@ -1,0 +1,25 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+# Skillshare config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
+# Public metadata seed hash: {{ include "dot_config/skillshare/metadata-seed.json" | sha256sum }}
+
+set -euo pipefail
+
+metadata_seed={{ joinPath .chezmoi.sourceDir "dot_config/skillshare/metadata-seed.json" | quote }}
+metadata_path="$HOME/.local/share/skillshare/skills/.metadata.json"
+
+mkdir -p "${metadata_path%/*}"
+cp "$metadata_seed" "$metadata_path"
+
+if ! mise exec -- skillshare install --global; then
+  echo "Skillshare install failed; continuing with existing skills." >&2
+fi
+if ! mise exec -- skillshare update --all --global; then
+  echo "Skillshare update failed; continuing with existing skills." >&2
+fi
+
+# Keep chezmoi's public-only metadata seed authoritative after runtime updates.
+cp "$metadata_seed" "$metadata_path"
+mise exec -- skillshare sync --global
+{{ end -}}

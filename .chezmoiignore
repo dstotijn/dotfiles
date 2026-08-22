@@ -1,6 +1,7 @@
 Brewfile
 README.md
 AGENTS.md
+tmp/**
 .claude/mcp-servers.json
 
 {{- if ne .chezmoi.os "linux" }}

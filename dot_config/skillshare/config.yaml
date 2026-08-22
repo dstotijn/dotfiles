@@ -11,6 +11,9 @@ targets:
   opencode:
     skills:
       path: ~/.config/opencode/skills
+  pi:
+    skills:
+      path: ~/.pi/skills
 ignore:
   - '**/.DS_Store'
   - '**/.git/**'

@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "entries": {
+    "anthropic/frontend-design": {
+      "source": "anthropics/skills/skills/frontend-design"
+    },
+    "anthropic/mcp-builder": {
+      "source": "anthropics/skills/skills/mcp-builder"
+    },
+    "anthropic/pdf": {
+      "source": "anthropics/skills/skills/pdf"
+    },
+    "anthropic/skill-creator": {
+      "source": "anthropics/skills/skills/skill-creator"
+    },
+    "anthropic/webapp-testing": {
+      "source": "anthropics/skills/skills/webapp-testing"
+    },
+    "doist/todoist-cli": {
+      "source": "Doist/todoist-cli/skills/todoist-cli"
+    },
+    "dstotijn/dev-preferences": {
+      "source": "dstotijn/agent-skills/skills/dev-preferences"
+    },
+    "dstotijn/go-dev": {
+      "source": "dstotijn/agent-skills/skills/go-dev"
+    },
+    "dstotijn/mise": {
+      "source": "dstotijn/agent-skills/skills/mise"
+    },
+    "dstotijn/peer-consult": {
+      "source": "dstotijn/agent-skills/skills/peer-consult"
+    },
+    "dstotijn/plain-english": {
+      "source": "dstotijn/agent-skills/skills/plain-english"
+    },
+    "googleworkspace/gws-sheets": {
+      "source": "googleworkspace/cli/skills/gws-sheets"
+    },
+    "googleworkspace/gws-sheets-append": {
+      "source": "googleworkspace/cli/skills/gws-sheets-append"
+    },
+    "googleworkspace/gws-sheets-read": {
+      "source": "googleworkspace/cli/skills/gws-sheets-read"
+    },
+    "mattpocock/ask-matt": {
+      "source": "mattpocock/skills/skills/engineering/ask-matt"
+    },
+    "mattpocock/codebase-design": {
+      "source": "mattpocock/skills/skills/engineering/codebase-design"
+    },
+    "mattpocock/diagnosing-bugs": {
+      "source": "mattpocock/skills/skills/engineering/diagnosing-bugs"
+    },
+    "mattpocock/domain-modeling": {
+      "source": "mattpocock/skills/skills/engineering/domain-modeling"
+    },
+    "mattpocock/grill-me": {
+      "source": "mattpocock/skills/skills/productivity/grill-me"
+    },
+    "mattpocock/grill-with-docs": {
+      "source": "mattpocock/skills/skills/engineering/grill-with-docs"
+    },
+    "mattpocock/grilling": {
+      "source": "mattpocock/skills/skills/productivity/grilling"
+    },
+    "mattpocock/handoff": {
+      "source": "mattpocock/skills/skills/productivity/handoff"
+    },
+    "mattpocock/implement": {
+      "source": "mattpocock/skills/skills/engineering/implement"
+    },
+    "mattpocock/improve-codebase-architecture": {
+      "source": "mattpocock/skills/skills/engineering/improve-codebase-architecture"
+    },
+    "mattpocock/prototype": {
+      "source": "mattpocock/skills/skills/engineering/prototype"
+    },
+    "mattpocock/research": {
+      "source": "mattpocock/skills/skills/engineering/research"
+    },
+    "mattpocock/setup-matt-pocock-skills": {
+      "source": "mattpocock/skills/skills/engineering/setup-matt-pocock-skills"
+    },
+    "mattpocock/tdd": {
+      "source": "mattpocock/skills/skills/engineering/tdd"
+    },
+    "mattpocock/teach": {
+      "source": "mattpocock/skills/skills/productivity/teach"
+    },
+    "mattpocock/to-questionnaire": {
+      "source": "mattpocock/skills/skills/productivity/to-questionnaire"
+    },
+    "mattpocock/to-spec": {
+      "source": "mattpocock/skills/skills/engineering/to-spec"
+    },
+    "mattpocock/to-tickets": {
+      "source": "mattpocock/skills/skills/engineering/to-tickets"
+    },
+    "mattpocock/triage": {
+      "source": "mattpocock/skills/skills/engineering/triage"
+    },
+    "mattpocock/wait-what": {
+      "source": "mattpocock/skills/skills/productivity/wait-what"
+    },
+    "mattpocock/wayfinder": {
+      "source": "mattpocock/skills/skills/engineering/wayfinder"
+    },
+    "mattpocock/wizard": {
+      "source": "mattpocock/skills/skills/engineering/wizard"
+    },
+    "skillshare/skillshare": {
+      "source": "runkids/skillshare/skills/skillshare"
+    },
+    "vercel/agent-browser": {
+      "source": "vercel-labs/agent-browser/skills/agent-browser"
+    }
+  }
+}
