@@ -34,6 +34,9 @@
     "dstotijn/plain-english": {
       "source": "dstotijn/agent-skills/skills/plain-english"
     },
+    "dstotijn/tmux": {
+      "source": "dstotijn/agent-skills/skills/tmux"
+    },
     "googleworkspace/gws-sheets": {
       "source": "googleworkspace/cli/skills/gws-sheets"
     },
@@ -63,9 +66,6 @@
     },
     "mattpocock/grilling": {
       "source": "mattpocock/skills/skills/productivity/grilling"
-    },
-    "mattpocock/handoff": {
-      "source": "mattpocock/skills/skills/productivity/handoff"
     },
     "mattpocock/implement": {
       "source": "mattpocock/skills/skills/engineering/implement"

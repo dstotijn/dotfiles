@@ -1,0 +1,7 @@
+interface:
+  display_name: "Handoff"
+  short_description: "Save context for the next agent session"
+  default_prompt: "Use $handoff to worklog."
+
+policy:
+  allow_implicit_invocation: false

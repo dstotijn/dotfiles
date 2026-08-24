@@ -1,17 +1,52 @@
 {{- if eq .chezmoi.os "darwin" -}}
+{{- $localSkills := joinPath .chezmoi.sourceDir "dot_config/skillshare/skills" -}}
 #!/bin/bash
 
 # Skillshare config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
 # Public metadata seed hash: {{ include "dot_config/skillshare/metadata-seed.json" | sha256sum }}
-# Local tts skill hashes: {{ include "dot_config/skillshare/skills/tts/SKILL.md" | sha256sum }} {{ include "dot_config/skillshare/skills/tts/scripts/executable_tts.sh" | sha256sum }}
+# Local skill hashes:
+{{- range (glob (joinPath $localSkills "**")) }}
+{{- if not (stat .).isDir }}
+#   {{ trimPrefix $localSkills . }} {{ include . | sha256sum }}
+{{- end }}
+{{- end }}
 
 set -euo pipefail
 
 metadata_seed={{ joinPath .chezmoi.sourceDir "dot_config/skillshare/metadata-seed.json" | quote }}
 metadata_path="$HOME/.local/share/skillshare/skills/.metadata.json"
 
-mkdir -p "${metadata_path%/*}"
-cp "$metadata_seed" "$metadata_path"
+# The seed decides which skills exist, but skillshare records more than the seed
+# can carry: pinned commits, tree hashes and per-file hashes that make
+# `skillshare check` meaningful. Overwriting the file would discard those, so
+# merge instead. Entries the seed no longer lists are dropped; locally installed
+# skills survive because the loop below re-creates them.
+merge_metadata() {
+  python3 - "$metadata_seed" "$metadata_path" <<'PY'
+import json, os, sys
+
+seed_path, meta_path = sys.argv[1], sys.argv[2]
+with open(seed_path) as f:
+    seed = json.load(f)
+try:
+    with open(meta_path) as f:
+        live_entries = json.load(f).get("entries", {})
+except (FileNotFoundError, ValueError):
+    live_entries = {}
+
+# An installed entry is richer than its seed counterpart, so it wins. Changing a
+# seed source therefore needs the stale entry removed by hand.
+merged = {name: live_entries.get(name, entry) for name, entry in seed["entries"].items()}
+merged.update({n: e for n, e in live_entries.items() if n.startswith("local/")})
+
+os.makedirs(os.path.dirname(meta_path), exist_ok=True)
+with open(meta_path, "w") as f:
+    json.dump({"version": seed.get("version", 1), "entries": dict(sorted(merged.items()))}, f, indent=2)
+    f.write("\n")
+PY
+}
+
+merge_metadata
 
 if ! mise exec -- skillshare install --global; then
   echo "Skillshare install failed; continuing with existing skills." >&2
@@ -20,13 +55,16 @@ if ! mise exec -- skillshare update --all --global; then
   echo "Skillshare update failed; continuing with existing skills." >&2
 fi
 
-# Keep chezmoi's public-only metadata seed authoritative after runtime updates.
-cp "$metadata_seed" "$metadata_path"
+merge_metadata
 
-# Locally authored skills live in this repo, not in a hub, so they are installed
-# by path after the seed is written. Their metadata is re-created on every run.
-mise exec -- skillshare uninstall tts --force || true
-mise exec -- skillshare install "$HOME/.config/skillshare/skills/tts" --into local --force
+# Locally authored skills live in this repo rather than in a hub, so they are
+# installed by path after the metadata is settled. The uninstall clears any
+# earlier copy installed outside the local group and is a no-op once migrated.
+for skill_dir in "$HOME/.config/skillshare/skills"/*/; do
+  skill_name=$(basename "$skill_dir")
+  mise exec -- skillshare uninstall "$skill_name" --force || true
+  mise exec -- skillshare install "${skill_dir%/}" --into local --force
+done
 
 mise exec -- skillshare sync --global
 {{ end -}}
