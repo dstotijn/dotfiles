@@ -112,6 +112,9 @@
     "skillshare/skillshare": {
       "source": "runkids/skillshare/skills/skillshare"
     },
+    "tuicr": {
+      "source": "agavra/tuicr/skills/tuicr"
+    },
     "vercel/agent-browser": {
       "source": "vercel-labs/agent-browser/skills/agent-browser"
     }

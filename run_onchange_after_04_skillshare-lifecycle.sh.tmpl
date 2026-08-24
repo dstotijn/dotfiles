@@ -3,6 +3,7 @@
 
 # Skillshare config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
 # Public metadata seed hash: {{ include "dot_config/skillshare/metadata-seed.json" | sha256sum }}
+# Local tts skill hashes: {{ include "dot_config/skillshare/skills/tts/SKILL.md" | sha256sum }} {{ include "dot_config/skillshare/skills/tts/scripts/executable_tts.sh" | sha256sum }}
 
 set -euo pipefail
 
@@ -21,5 +22,11 @@ fi
 
 # Keep chezmoi's public-only metadata seed authoritative after runtime updates.
 cp "$metadata_seed" "$metadata_path"
+
+# Locally authored skills live in this repo, not in a hub, so they are installed
+# by path after the seed is written. Their metadata is re-created on every run.
+mise exec -- skillshare uninstall tts --force || true
+mise exec -- skillshare install "$HOME/.config/skillshare/skills/tts" --into local --force
+
 mise exec -- skillshare sync --global
 {{ end -}}
