@@ -25,6 +25,9 @@
     "dstotijn/go-dev": {
       "source": "dstotijn/agent-skills/skills/go-dev"
     },
+    "dstotijn/handoff": {
+      "source": "dstotijn/agent-skills/skills/handoff"
+    },
     "dstotijn/mise": {
       "source": "dstotijn/agent-skills/skills/mise"
     },
@@ -36,6 +39,9 @@
     },
     "dstotijn/tmux": {
       "source": "dstotijn/agent-skills/skills/tmux"
+    },
+    "dstotijn/tts": {
+      "source": "dstotijn/agent-skills/skills/tts"
     },
     "googleworkspace/gws-sheets": {
       "source": "googleworkspace/cli/skills/gws-sheets"
