@@ -1,0 +1,491 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+state_root=${CODEX_PEER_STATE_DIR:-${TMPDIR:-/tmp}/claude-codex-peer-$(id -u)}
+split_percent=45
+min_pane_width=${CODEX_PEER_MIN_PANE_WIDTH:-80}
+default_wait_seconds=3600
+acpx_bin=${CODEX_PEER_ACPX:-acpx}
+
+# acpx denies every tool class it is not explicitly told to allow, so the peer
+# can read files and run read-only shell commands but cannot edit, move, or
+# delete anything. This holds whether or not a TTY is attached, which matters
+# because the peer runs in a tmux pane and an interactive prompt would hang it.
+permission_policy='{"autoApprove":["read","search","fetch","think","execute","other"],"defaultAction":"deny"}'
+
+read_only_preamble='You are acting as a read-only peer adviser for another agent. Inspect the
+repository and run read-only commands as needed, but do not modify the working
+tree or any other project files. Answer the brief below.'
+
+usage() {
+  cat >&2 <<'EOF'
+Usage:
+  codex-peer start [--cwd DIR] [--model MODEL] [--effort LEVEL]
+  codex-peer follow-up JOB_ID
+  codex-peer status JOB_ID
+  codex-peer wait JOB_ID [MAX_SECONDS]
+  codex-peer result JOB_ID
+
+Run `wait` once in the background. It blocks until the round reaches a
+terminal state, then exits.
+EOF
+  exit 64
+}
+
+die() {
+  printf 'codex-peer: %s\n' "$*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
+
+validate_job_id() {
+  case "$1" in
+    ????????-????-????-????-????????????)
+      case "$1" in
+        *[!0-9a-f-]*) die "invalid job ID: $1" ;;
+      esac
+      ;;
+    *) die "invalid job ID: $1" ;;
+  esac
+}
+
+job_path() {
+  validate_job_id "$1"
+  printf '%s/%s\n' "$state_root" "$1"
+}
+
+read_file() {
+  local value=
+  if [ -f "$1" ]; then
+    IFS= read -r value < "$1" || true
+  fi
+  printf '%s' "$value"
+}
+
+write_state() {
+  local job_dir=$1
+  local state=$2
+  local round=$3
+  local exit_code=${4:-null}
+  local stop_reason=${5:-}
+  local state_tmp="$job_dir/state.json.tmp"
+
+  jq -n \
+    --arg state "$state" \
+    --argjson round "$round" \
+    --argjson exit_code "$exit_code" \
+    --arg stop_reason "$stop_reason" \
+    --arg session "$(read_file "$job_dir/session")" \
+    --arg stream_path "$job_dir/round-$round.stream.jsonl" \
+    --arg result_path "$job_dir/round-$round.result.txt" \
+    --arg stderr_path "$job_dir/round-$round.stderr.log" \
+    --arg updated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    '{
+      state: $state,
+      round: $round,
+      exit_code: $exit_code,
+      stop_reason: (if $stop_reason == "" then null else $stop_reason end),
+      session: $session,
+      stream_path: $stream_path,
+      result_path: $result_path,
+      stderr_path: $stderr_path,
+      updated_at: $updated_at
+    }' > "$state_tmp"
+  mv "$state_tmp" "$job_dir/state.json"
+}
+
+capture_prompt() {
+  local prompt_file=$1
+  local prompt
+
+  prompt=$(cat)
+  [ -n "$prompt" ] || die "prompt is empty"
+  printf '%s\n' "$prompt" > "$prompt_file"
+}
+
+pane_exists() {
+  local pane_id=$1
+  local listed_pane
+
+  while IFS= read -r listed_pane; do
+    if [ "$listed_pane" = "$pane_id" ]; then
+      return 0
+    fi
+  done < <(tmux list-panes -a -F '#{pane_id}')
+  return 1
+}
+
+# A side-by-side split is only worth it while both halves stay readable.
+# Concurrent peer jobs each split the caller's pane again, so without this
+# check the third or fourth job squeezes the caller down to a column or two
+# and the next one fails outright with "no space for new pane".
+pane_fits_split() {
+  local parent_pane=$1
+  local parent_width
+  local new_width
+  local kept_width
+
+  parent_width=$(tmux display-message -p -t "$parent_pane" '#{pane_width}' 2>/dev/null)
+  case "$parent_width" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+
+  new_width=$((parent_width * split_percent / 100))
+  kept_width=$((parent_width - new_width))
+  [ "$new_width" -ge "$min_pane_width" ] && [ "$kept_width" -ge "$min_pane_width" ]
+}
+
+launch_round() {
+  local job_dir=$1
+  local round=$2
+  local cwd
+  local mode
+  local pane_id=
+  local parent_pane=
+  local short_id=
+  local pid=
+
+  cwd=$(read_file "$job_dir/cwd")
+  write_state "$job_dir" running "$round"
+
+  if [ -n "${TMUX:-}" ] && command -v tmux >/dev/null 2>&1; then
+    mode=tmux
+    if [ -f "$job_dir/pane_id" ]; then
+      pane_id=$(read_file "$job_dir/pane_id")
+    fi
+
+    if [ -n "$pane_id" ] && pane_exists "$pane_id"; then
+      tmux respawn-pane -k -t "$pane_id" -c "$cwd" \
+        bash "$script_dir/codex-peer" _run "$job_dir" "$round" || die "could not reuse tmux pane"
+    else
+      short_id=$(basename "$job_dir" | cut -c1-8)
+      parent_pane=${TMUX_PANE:-}
+      if [ -z "$parent_pane" ]; then
+        parent_pane=$(tmux display-message -p '#{pane_id}')
+      fi
+
+      if pane_fits_split "$parent_pane"; then
+        pane_id=$(tmux split-window -h -d -l "$split_percent%" -t "$parent_pane" -c "$cwd" \
+          -P -F '#{pane_id}' \
+          bash "$script_dir/codex-peer" _run "$job_dir" "$round") || die "could not create tmux pane"
+      else
+        pane_id=$(tmux new-window -d -c "$cwd" -n "codex-peer-$short_id" -P -F '#{pane_id}' \
+          bash "$script_dir/codex-peer" _run "$job_dir" "$round") || die "could not create tmux window"
+      fi
+
+      printf '%s\n' "$pane_id" > "$job_dir/pane_id"
+      tmux set-option -p -t "$pane_id" remain-on-exit off
+      tmux select-pane -t "$pane_id" -T "Codex peer $short_id"
+    fi
+  else
+    mode=headless
+    nohup bash "$script_dir/codex-peer" _run "$job_dir" "$round" \
+      > "$job_dir/round-$round.display.log" 2>&1 < /dev/null &
+    pid=$!
+    printf '%s\n' "$pid" > "$job_dir/pid"
+  fi
+
+  printf '%s\n' "$mode" > "$job_dir/mode"
+  jq -n \
+    --arg job_id "$(basename "$job_dir")" \
+    --arg session "$(read_file "$job_dir/session")" \
+    --arg mode "$mode" \
+    --arg pane_id "$pane_id" \
+    --argjson round "$round" \
+    '{
+      job_id: $job_id,
+      session: $session,
+      mode: $mode,
+      pane_id: (if $pane_id == "" then null else $pane_id end),
+      round: $round,
+      state: "running"
+    }'
+}
+
+start_job() {
+  local cwd=$PWD
+  local model=
+  local effort=
+  local job_id
+  local job_dir
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --cwd)
+        [ "$#" -ge 2 ] || usage
+        cwd=$2
+        shift 2
+        ;;
+      --model)
+        [ "$#" -ge 2 ] || usage
+        model=$2
+        shift 2
+        ;;
+      --effort)
+        [ "$#" -ge 2 ] || usage
+        effort=$2
+        shift 2
+        ;;
+      *) usage ;;
+    esac
+  done
+
+  require_command "$acpx_bin"
+  require_command jq
+  require_command uuidgen
+  [ -d "$cwd" ] || die "working directory does not exist: $cwd"
+  cwd=$(cd "$cwd" && pwd -P)
+  job_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  job_dir="$state_root/$job_id"
+
+  umask 077
+  mkdir -p "$job_dir"
+  printf '%s\n' "$cwd" > "$job_dir/cwd"
+  # The acpx session name is derived from the job ID, so it is known before the
+  # round runs. Resuming never depends on scraping a thread ID out of the
+  # stream, which means even a round that dies early stays addressable.
+  printf 'peer-%s\n' "${job_id%%-*}" > "$job_dir/session"
+  printf '%s\n' "$model" > "$job_dir/model"
+  printf '%s\n' "$effort" > "$job_dir/effort"
+  printf '1\n' > "$job_dir/round"
+  capture_prompt "$job_dir/round-1.prompt"
+  launch_round "$job_dir" 1
+}
+
+follow_up() {
+  [ "$#" -eq 1 ] || usage
+  local job_dir
+  local state
+  local round
+
+  job_dir=$(job_path "$1")
+  [ -d "$job_dir" ] || die "job not found: $1"
+  state=$(jq -r '.state' "$job_dir/state.json")
+  [ "$state" != running ] || die "job is still running"
+
+  round=$(( $(read_file "$job_dir/round") + 1 ))
+  capture_prompt "$job_dir/round-$round.prompt"
+  printf '%s\n' "$round" > "$job_dir/round"
+  launch_round "$job_dir" "$round"
+}
+
+effective_status() {
+  local job_dir=$1
+  local state
+  local mode
+  local alive=false
+  local pane_id=
+  local pid=
+
+  state=$(jq -r '.state' "$job_dir/state.json")
+  mode=$(read_file "$job_dir/mode")
+  if [ -f "$job_dir/pane_id" ]; then
+    pane_id=$(read_file "$job_dir/pane_id")
+    if [ "$mode" = tmux ] && ! pane_exists "$pane_id"; then
+      pane_id=
+    fi
+  fi
+
+  if [ "$state" = running ]; then
+    if [ "$mode" = tmux ] && [ -n "$pane_id" ]; then
+      if pane_exists "$pane_id" && [ "$(tmux display-message -p -t "$pane_id" '#{pane_dead}')" = 0 ]; then
+        alive=true
+      fi
+    elif [ "$mode" = headless ] && [ -f "$job_dir/pid" ]; then
+      pid=$(read_file "$job_dir/pid")
+      if kill -0 "$pid" >/dev/null 2>&1; then
+        alive=true
+      fi
+    fi
+  fi
+
+  jq \
+    --arg mode "$mode" \
+    --arg pane_id "$pane_id" \
+    --argjson alive "$alive" \
+    'if .state == "running" and ($alive | not) then .state = "lost" else . end
+      | .mode = $mode
+      | .pane_id = (if $pane_id == "" then null else $pane_id end)' \
+    "$job_dir/state.json"
+}
+
+status_job() {
+  [ "$#" -eq 1 ] || usage
+  local job_dir
+
+  job_dir=$(job_path "$1")
+  [ -d "$job_dir" ] || die "job not found: $1"
+  effective_status "$job_dir"
+}
+
+wait_job() {
+  [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
+  local job_dir
+  local timeout=${2:-$default_wait_seconds}
+  local elapsed=0
+  local state
+  local status_json
+
+  case "$timeout" in
+    ''|*[!0-9]*) die "wait timeout must be a non-negative integer" ;;
+  esac
+
+  job_dir=$(job_path "$1")
+  [ -d "$job_dir" ] || die "job not found: $1"
+
+  while [ "$elapsed" -lt "$timeout" ]; do
+    status_json=$(effective_status "$job_dir")
+    state=$(printf '%s' "$status_json" | jq -r '.state')
+    if [ "$state" != running ]; then
+      printf '%s\n' "$status_json"
+      return 0
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  effective_status "$job_dir"
+}
+
+result_job() {
+  [ "$#" -eq 1 ] || usage
+  local job_dir
+  local state
+  local round
+  local result_path
+
+  job_dir=$(job_path "$1")
+  [ -d "$job_dir" ] || die "job not found: $1"
+  state=$(effective_status "$job_dir" | jq -r '.state')
+  [ "$state" != running ] || die "job is still running"
+  [ "$state" != lost ] || die "job process disappeared before recording a result"
+
+  round=$(read_file "$job_dir/round")
+  result_path="$job_dir/round-$round.result.txt"
+  if [ -s "$result_path" ]; then
+    sed -n '1,$p' "$result_path"
+  else
+    die "Codex returned no result; inspect $job_dir/round-$round.stderr.log"
+  fi
+}
+
+run_round() {
+  [ "$#" -eq 2 ] || usage
+  local job_dir=$1
+  local round=$2
+  local cwd
+  local session
+  local model
+  local effort
+  local prompt_path
+  local stream_path="$job_dir/round-$round.stream.jsonl"
+  local stderr_path="$job_dir/round-$round.stderr.log"
+  local result_path="$job_dir/round-$round.result.txt"
+  local codex_config
+  local acpx_exit
+  local stop_reason=
+  local state=failed
+  local -a acpx_args
+  local -a pipeline_status
+
+  require_command "$acpx_bin"
+  require_command jq
+  cwd=$(read_file "$job_dir/cwd")
+  session=$(read_file "$job_dir/session")
+  model=$(read_file "$job_dir/model")
+  effort=$(read_file "$job_dir/effort")
+  prompt_path="$job_dir/round-$round.prompt"
+
+  if [ "$round" -eq 1 ]; then
+    # Round one carries the read-only framing; later rounds inherit it from the
+    # session, which acpx keeps for us.
+    printf '%s\n\n%s\n' "$read_only_preamble" "$(cat "$prompt_path")" \
+      > "$job_dir/round-$round.sent"
+    prompt_path="$job_dir/round-$round.sent"
+  fi
+
+  # Second layer of read-only enforcement, under acpx's permission policy:
+  # Codex's own sandbox. This overrides whatever the user's ~/.codex/config.toml
+  # says, which matters because that file may run wide open day to day.
+  codex_config=$(jq -nc \
+    --arg effort "$effort" \
+    '{sandbox_mode: "read-only", approval_policy: "never", mcp_servers: {}}
+      + (if $effort == "" then {} else {model_reasoning_effort: $effort} end)')
+
+  acpx_args=(
+    --cwd "$cwd"
+    --permission-policy "$permission_policy"
+    --format json
+    --json-strict
+    --non-interactive-permissions deny
+  )
+  if [ -n "$model" ]; then
+    acpx_args+=(--model "$model")
+  fi
+
+  printf '\033[1;36mCodex peer · round %s\033[0m\n' "$round"
+  printf '\033[2m%s · session %s\033[0m\n\n' "$cwd" "$session"
+
+  # Make sure the named session exists before prompting; acpx exits 4 rather
+  # than silently forking a new conversation.
+  INITIAL_AGENT_MODE=read-only CODEX_CONFIG="$codex_config" \
+    "$acpx_bin" "${acpx_args[@]}" codex sessions ensure --name "$session" \
+    >> "$stderr_path" 2>&1 || die "could not create or reuse acpx session $session"
+
+  set +e
+  INITIAL_AGENT_MODE=read-only CODEX_CONFIG="$codex_config" \
+    "$acpx_bin" "${acpx_args[@]}" codex -s "$session" --file "$prompt_path" \
+    2>> "$stderr_path" | tee "$stream_path" | jq --unbuffered -j -f "$script_dir/render-stream.jq"
+  pipeline_status=("${PIPESTATUS[@]}")
+  set -e
+  acpx_exit=${pipeline_status[0]}
+
+  # The ACP stop reason is the completion contract. The peer's answer is the
+  # concatenation of its message chunks; thinking arrives on a separate channel
+  # and is deliberately left out of the result.
+  stop_reason=$(jq -r 'select((.result | type) == "object") | .result.stopReason // empty' \
+    "$stream_path" | tail -n 1)
+  jq -j 'select(.method == "session/update")
+    | .params.update
+    | select(.sessionUpdate == "agent_message_chunk")
+    | .content.text // ""' "$stream_path" > "$result_path"
+
+  # A read-only peer that reaches for an edit trips acpx's deny policy and acpx
+  # exits 5, but the round is still usable if the turn ended normally and the
+  # peer said something. Judge the round on the protocol, not on that exit code.
+  if [ "$stop_reason" = end_turn ] && [ -s "$result_path" ]; then
+    state=succeeded
+  fi
+  write_state "$job_dir" "$state" "$round" "$acpx_exit" "$stop_reason"
+
+  if [ "$state" = succeeded ]; then
+    if [ "$acpx_exit" -eq 5 ]; then
+      printf '\n\033[1;33mCodex finished; a write attempt was denied.\033[0m\n'
+    else
+      printf '\n\033[1;32mCodex finished.\033[0m\n'
+    fi
+  else
+    printf '\n\033[1;31mCodex failed (exit %s, stop %s). See %s\033[0m\n' \
+      "$acpx_exit" "${stop_reason:-none}" "$stderr_path"
+  fi
+}
+
+command_name=${1:-}
+if [ "$#" -gt 0 ]; then
+  shift
+fi
+
+case "$command_name" in
+  start) start_job "$@" ;;
+  follow-up) follow_up "$@" ;;
+  status) status_job "$@" ;;
+  wait) wait_job "$@" ;;
+  result) result_job "$@" ;;
+  _run) run_round "$@" ;;
+  *) usage ;;
+esac

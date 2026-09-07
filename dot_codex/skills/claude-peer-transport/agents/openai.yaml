@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claude Peer Transport"
+  short_description: "Run a visible, read-only Claude peer"
+  default_prompt: "Use $claude-peer-transport with $peer-consult to confer with Claude in a visible tmux pane."

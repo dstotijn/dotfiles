@@ -1,0 +1,28 @@
+{
+  "version": "1",
+  "bank": {
+    "retain_mission": "Durable engineering knowledge only: technical decisions and their rationale, confirmed root causes and fixes, proven procedures and workarounds, and non-obvious constraints. Every memory is keyed by its tracker issue ID, stated as a literal token at the start of the content. Ignore routine progress, unconfirmed hypotheses, and anything cheaply recoverable from the repository or the issue tracker.",
+    "reflect_mission": "Synthesize across past engineering work to explain why an area is shaped the way it is, surfacing prior decisions, confirmed failures, and constraints that should guide the work at hand.",
+    "enable_observations": true
+  },
+  "directives": [
+    {
+      "name": "issue-id-keying",
+      "content": "Every retained memory must lead with its tracker issue ID as a literal token, for example 'ABC-1234:'. The issue ID is the join key for later recall.",
+      "priority": 100,
+      "is_active": true
+    },
+    {
+      "name": "context-vocabulary",
+      "content": "Retain with exactly one of these contexts: 'decisions' for a technical choice and its rationale, 'learnings' for a confirmed root cause or a lesson that prevents repeated work, 'procedures' for a proven command, workflow, or workaround, 'constraints' for a non-obvious limitation that will matter again.",
+      "priority": 90,
+      "is_active": true
+    },
+    {
+      "name": "no-secrets",
+      "content": "Never retain credentials, API keys, tokens, connection strings, private keys, or customer names and customer data.",
+      "priority": 100,
+      "is_active": true
+    }
+  ]
+}

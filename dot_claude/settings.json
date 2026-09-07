@@ -3,22 +3,63 @@
     "commit": "",
     "pr": ""
   },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "in-process",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh"
   },
   "hooks": {
     "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/sidebar-hook.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/hindsight-recall-hook.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ],
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/sidebar-hook.sh"
+          }
+        ]
+      }
     ],
     "Stop": [
-      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/sidebar-hook.sh"
+          }
+        ]
+      }
     ],
     "Notification": [
-      { "hooks": [{ "type": "command", "command": "~/.claude/scripts/sidebar-hook.sh" }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/sidebar-hook.sh"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
@@ -32,9 +73,9 @@
       }
     }
   },
-  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "autoMemoryEnabled": false,
   "preferredNotifChannel": "ghostty",
+  "effortLevel": "high",
   "tui": "fullscreen"
 }
