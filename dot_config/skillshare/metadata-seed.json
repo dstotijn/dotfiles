@@ -52,6 +52,9 @@
     "googleworkspace/gws-sheets-read": {
       "source": "googleworkspace/cli/skills/gws-sheets-read"
     },
+    "humanlayer/show-me": {
+      "source": "humanlayer/skills/show-me"
+    },
     "mattpocock/ask-matt": {
       "source": "mattpocock/skills/skills/engineering/ask-matt"
     },

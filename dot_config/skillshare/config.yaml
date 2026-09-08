@@ -8,6 +8,9 @@ targets:
   codex:
     skills:
       path: ~/.codex/skills
+  omp:
+    skills:
+      path: ~/.omp/agent/skills
   opencode:
     skills:
       path: ~/.config/opencode/skills
