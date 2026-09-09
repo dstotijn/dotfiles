@@ -1,0 +1,19 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Preserve OMP's machine-local settings while managing model routing. */ -}}
+{{- .chezmoi.stdin | default "{}" | fromYaml
+  | setValueAtPath "modelRoles.default" "openai-codex/gpt-5.6-sol:high"
+  | setValueAtPath "modelRoles.plan" "@default"
+  | setValueAtPath "modelRoles.slow" "openai-codex/gpt-5.6-sol:xhigh"
+  | setValueAtPath "modelRoles.implementation" "openai-codex/gpt-5.6-sol:medium"
+  | setValueAtPath "modelRoles.task" "@implementation"
+  | setValueAtPath "modelRoles.smol" "openai-codex/gpt-5.6-sol:low"
+  | setValueAtPath "modelRoles.tiny" "@smol"
+  | setValueAtPath "modelRoles.review" "@default"
+  | setValueAtPath "modelRoles.advisor" "openai-codex/gpt-5.6-sol:medium"
+  | setValueAtPath "defaultThinkingLevel" "high"
+  | setValueAtPath "task.agentModelOverrides.task" "@implementation"
+  | setValueAtPath "task.agentModelOverrides.sonic" "@smol"
+  | setValueAtPath "task.agentModelOverrides.scout" "@implementation"
+  | setValueAtPath "task.agentModelOverrides.reviewer" "@review"
+  | setValueAtPath "task.agentModelOverrides.security-reviewer" "@review"
+  | toYaml -}}
