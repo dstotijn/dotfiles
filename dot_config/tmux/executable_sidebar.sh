@@ -24,12 +24,10 @@ fg_desc="${e}[38;2;127;132;156m"   # overlay1  #7f849c
 fg_mark="${e}[38;2;203;166;247m"   # mauve     #cba6f7
 rst="${e}[0m"
 
-# Target the session by id, not name: ids survive rename-session, names do not, and
-# a name captured once here would break every lookup the moment the session is
-# renamed. The display name is re-read on each draw instead.
-sid=$(tmux display -p -t "$pane" '#{session_id}')
 map="${TMPDIR:-/tmp}/tmux-sidebar-${pane}.map"
-cache="${TMPDIR:-/tmp}/tmux-sidebar-cache-${sid#$}"
+# Keyed by window id, which is unique server-wide, so every sidebar shares one
+# cache and a window keeps its entry when it moves between sessions.
+cache="${TMPDIR:-/tmp}/tmux-sidebar-cache"
 mkdir -p "$cache" 2>/dev/null
 
 trap 'rm -f "$map" "$map.tmp"' EXIT
@@ -75,13 +73,18 @@ render() {
     return 0
   fi
 
-  local width height recap maxdesc session out wid idx active name desc src text line n i
+  local width height recap maxdesc session sid out wid idx active name desc src text line n i
   local -a lines=() owner=()
   width=$(tmux display -p -t "$pane" '#{pane_width}')
   height=$(tmux display -p -t "$pane" '#{pane_height}')
   [ "$width" -gt 8 ] 2>/dev/null || return 0
   recap=$(tmux show -gv @sidebar-recap 2>/dev/null)
   session=$(tmux display -p -t "$pane" '#{session_name}')
+  # Resolved per draw, not once at startup: move-window can hand this pane to a
+  # different session, and a session captured at startup would leave the sidebar
+  # listing the windows of the session it was born in. By id, not name, so a
+  # rename-session cannot break the lookup either.
+  sid=$(tmux display -p -t "$pane" '#{session_id}')
   maxdesc=$(tmux show -gv @sidebar-desc-lines 2>/dev/null)
   [ -n "$maxdesc" ] || maxdesc=2
 
