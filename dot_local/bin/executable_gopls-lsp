@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Keep gopls on a distinct OMP client cache key from TypeScript's mise command.
+exec mise exec -- gopls "$@"

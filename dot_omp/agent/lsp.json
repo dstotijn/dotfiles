@@ -1,0 +1,37 @@
+{
+  "servers": {
+    "typescript-native": {
+      "disabled": true
+    },
+    "typescript-native-mise": {
+      "command": "mise",
+      "args": [
+        "exec",
+        "npm:typescript@7.0.2",
+        "--",
+        "tsc",
+        "--lsp",
+        "--stdio"
+      ],
+      "fileTypes": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".mts",
+        ".cts",
+        ".mjs",
+        ".cjs"
+      ],
+      "rootMarkers": [
+        "package.json"
+      ]
+    },
+    "gopls": {
+      "command": "gopls-lsp",
+      "rootMarkers": [
+        ".git"
+      ]
+    }
+  }
+}
