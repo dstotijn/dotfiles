@@ -14,3 +14,4 @@ python = "3.14.6"
 "ubi:runkids/skillshare" = "0.20.22"
 "aqua:openai/codex" = "latest"
 worktrunk = "0.74.0"
+"npm:@opencode/cli" = { version = "beta", npm_args = "--ignore-scripts=false" }

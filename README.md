@@ -105,3 +105,9 @@ Based on AstroNvim v4 template. Most plugin configs under `dot_config/nvim/lua/p
 ## Fish Shell Integrations
 
 The fish config (`dot_config/fish/config.fish.tmpl`) initializes tools in order: Homebrew (macOS only) → 1Password CLI (macOS only) → mise → starship → zoxide → mcfly. Git abbreviations are defined there (gp, gd, gco, gst, etc.).
+
+Claude Code, Codex, Pi, OMP, and OpenCode2 are launched through Fish functions that inject the
+command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent commits use a
+dedicated signing-only SSH key through `dot_config/git/executable_agent-ssh-sign`; interactive Git
+continues to use the 1Password signer. The encrypted private key stays outside chezmoi and its
+passphrase is loaded from macOS Keychain into an ephemeral SSH agent for each signature.

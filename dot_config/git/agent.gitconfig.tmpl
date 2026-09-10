@@ -1,0 +1,21 @@
+[agent]
+	signingProfile = true
+[user]
+	name = David Stotijn
+	email = david@stellarcs.ai
+	signingKey = {{ .chezmoi.homeDir }}/.ssh/id_ed25519_agent_signing.pub
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = {{ .chezmoi.homeDir }}/.config/git/agent-ssh-sign
+	allowedSignersFile = {{ .chezmoi.homeDir }}/.config/git/allowed_signers
+[url "https://github.com/"]
+	insteadOf = git@github.com:
+	insteadOf = ssh://git@github.com/
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential

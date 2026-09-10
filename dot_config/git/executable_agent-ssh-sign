@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+
+runtime_dir=$(mktemp -d "${TMPDIR:-/tmp}/git-agent-signing.XXXXXX")
+socket="$runtime_dir/agent.sock"
+agent_pid=
+
+cleanup() {
+  if [ -n "$agent_pid" ]; then
+    kill "$agent_pid" 2>/dev/null || true
+    wait "$agent_pid" 2>/dev/null || true
+  fi
+  rm -rf "$runtime_dir"
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+/usr/bin/ssh-agent -D -a "$socket" >/dev/null 2>&1 &
+agent_pid=$!
+
+attempt=0
+while [ ! -S "$socket" ]; do
+  if ! kill -0 "$agent_pid" 2>/dev/null; then
+    echo "agent-ssh-sign: ssh-agent exited before creating its socket" >&2
+    exit 1
+  fi
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 100 ]; then
+    echo "agent-ssh-sign: timed out waiting for ssh-agent" >&2
+    exit 1
+  fi
+  sleep 0.05
+done
+
+if ! SSH_AUTH_SOCK="$socket" /usr/bin/ssh-add --apple-load-keychain >/dev/null 2>&1; then
+  echo "agent-ssh-sign: could not load the signing key from macOS Keychain" >&2
+  exit 1
+fi
+
+set +e
+SSH_AUTH_SOCK="$socket" /usr/bin/ssh-keygen "$@"
+status=$?
+set -e
+exit "$status"
