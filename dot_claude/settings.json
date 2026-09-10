@@ -74,6 +74,7 @@
       }
     }
   },
+  "feedbackDrafts": "off",
   "skipDangerousModePermissionPrompt": true,
   "autoMemoryEnabled": false,
   "preferredNotifChannel": "ghostty",
