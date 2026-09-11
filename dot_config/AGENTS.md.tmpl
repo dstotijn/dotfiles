@@ -8,6 +8,8 @@ Global instructions for AI coding agents.
 - Challenge the proposed approach if a simpler or more correct solution exists
 - Push back when assumptions seem wrong
 - Surface relevant pitfalls, edge cases, or industry practices I might not be aware of
+- When starting another agent harness, pass its task-specific context and constraints. Don't paste inherited system,
+  repository, `AGENTS.md`, or skill instructions; the child harness receives them automatically.
 
 ## Scope Discipline
 
@@ -15,6 +17,11 @@ Global instructions for AI coding agents.
 - Don't add comments, docstrings, or type annotations to code you didn't change
 - Don't add error handling or validation for scenarios that can't happen
 - A bug fix doesn't need the surrounding code reorganized
+
+## Shell
+
+- The user's interactive shell is Fish. Use Fish syntax for commands intended to run interactively, but use each
+  script or runtime's required dialect (for example, POSIX sh or Bash) when writing or editing code.
 
 ## Security
 
