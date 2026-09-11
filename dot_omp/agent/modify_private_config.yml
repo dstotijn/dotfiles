@@ -11,6 +11,7 @@
   | setValueAtPath "modelRoles.review" "@default"
   | setValueAtPath "modelRoles.advisor" "openai-codex/gpt-5.6-sol:medium"
   | setValueAtPath "defaultThinkingLevel" "high"
+  | setValueAtPath "browser.relay" true
   | setValueAtPath "task.enableEffort" false
   | setValueAtPath "task.agentModelOverrides.task" "@implementation"
   | setValueAtPath "task.agentModelOverrides.sonic" "@smol"
