@@ -11,6 +11,8 @@ targets:
   omp:
     skills:
       path: ~/.omp/agent/skills
+      exclude:
+        - vercel__agent-browser
   opencode:
     skills:
       path: ~/.config/opencode/skills
