@@ -24,11 +24,5 @@ function __run_coding_agent --description "Run a coding agent with its Git signi
     return 1
   end
 
-  set -l signing_program (command git config --path --get gpg.ssh.program)
-  if not test -x "$signing_program"
-    echo "Agent Git signing program is unavailable: $signing_program" >&2
-    return 1
-  end
-
   command $executable $arguments
 end

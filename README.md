@@ -108,6 +108,6 @@ The fish config (`dot_config/fish/config.fish.tmpl`) initializes tools in order:
 
 Claude Code, Codex, Pi, OMP, and OpenCode2 are launched through Fish functions that inject the
 command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent commits use a
-dedicated signing-only SSH key through `dot_config/git/executable_agent-ssh-sign`; interactive Git
-continues to use the 1Password signer. The encrypted private key stays outside chezmoi and its
-passphrase is loaded from macOS Keychain into an ephemeral SSH agent for each signature.
+dedicated signing-only SSH key at `~/.ssh/id_ed25519_agent_signing`; interactive Git continues to
+use the 1Password signer. The private key stays outside chezmoi and is provisioned from 1Password
+as an unencrypted, mode `0600` file so native `ssh-keygen` can sign without OS-specific services.

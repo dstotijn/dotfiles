@@ -1,3 +1,4 @@
 .config/fish/functions/gw.fish
 .config/skillshare/skills/tts
 .config/fish/functions/opencode.fish
+.config/git/agent-ssh-sign
