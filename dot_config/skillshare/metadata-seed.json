@@ -22,11 +22,17 @@
     "dstotijn/dev-preferences": {
       "source": "dstotijn/agent-skills/skills/dev-preferences"
     },
+    "dstotijn/github-review": {
+      "source": "dstotijn/agent-skills/skills/github-review"
+    },
     "dstotijn/go-dev": {
       "source": "dstotijn/agent-skills/skills/go-dev"
     },
     "dstotijn/handoff": {
       "source": "dstotijn/agent-skills/skills/handoff"
+    },
+    "dstotijn/hindsight": {
+      "source": "dstotijn/agent-skills/skills/hindsight"
     },
     "dstotijn/mise": {
       "source": "dstotijn/agent-skills/skills/mise"
@@ -42,6 +48,9 @@
     },
     "dstotijn/tts": {
       "source": "dstotijn/agent-skills/skills/tts"
+    },
+    "dstotijn/worktree-cleanup": {
+      "source": "dstotijn/agent-skills/skills/worktree-cleanup"
     },
     "googleworkspace/gws-sheets": {
       "source": "googleworkspace/cli/skills/gws-sheets"
