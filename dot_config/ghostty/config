@@ -19,6 +19,8 @@ keybind = ctrl+alt+shift+super+h=text:\x1b[15;2~
 keybind = ctrl+alt+shift+super+l=text:\x1b[17;2~
 keybind = ctrl+alt+shift+super+m=text:\x1b[18;2~
 keybind = ctrl+alt+shift+super+o=text:\x1b[19;2~
+# Hyper+Tab uses the remaining Shift-F11 transport; Shift-F12 is Cmd+K.
+keybind = ctrl+alt+shift+super+tab=text:\x1b[23;2~
 # Splits. Letters only: Hyper carries shift, and on macOS a punctuation key
 # still reports its shifted character, so `slash` never matches (the event reads
 # as `?`) and `>` is rejected by the parser outright. Letters survive because
