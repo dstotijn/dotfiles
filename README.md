@@ -59,6 +59,7 @@ chezmoi cd                 # Open shell in source directory
 | Git | `dot_gitconfig.tmpl` | SSH signing, neovim editor (templated home dir paths) |
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
 | Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |
+| Worktrunk | `dot_config/worktrunk/config.toml`, `dot_config/fish/{functions,completions}/private_wt.fish` | Git worktrees under each repository's `.worktrees/` directory |
 | Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 | AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
 

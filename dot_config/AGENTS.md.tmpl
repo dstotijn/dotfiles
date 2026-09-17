@@ -8,6 +8,8 @@ Global instructions for AI coding agents.
 - Challenge the proposed approach if a simpler or more correct solution exists
 - Push back when assumptions seem wrong
 - Surface relevant pitfalls, edge cases, or industry practices I might not be aware of
+- Use a Git worktree for repository work unless the user explicitly asks otherwise. Create, switch, and remove
+  worktrees with Worktrunk (`wt`), not raw `git worktree` commands.
 - When starting another agent harness, pass its task-specific context and constraints. Don't paste inherited system,
   repository, `AGENTS.md`, or skill instructions; the child harness receives them automatically.
 

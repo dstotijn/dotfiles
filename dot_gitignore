@@ -15,5 +15,6 @@
 .env.local
 
 tmp/
+.worktrees/
 
 **/.claude/.cc-writes/
