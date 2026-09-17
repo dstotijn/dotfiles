@@ -49,3 +49,8 @@ status_indicators = "dots"
 
 [ui.toast]
 delivery = "system"
+
+[ui.sound]
+enabled = true
+# Herdr warns for non-MP3 paths, but macOS plays custom sounds through afplay.
+path = "/System/Library/Sounds/Frog.aiff"
