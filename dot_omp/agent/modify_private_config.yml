@@ -12,6 +12,7 @@
   | setValueAtPath "modelRoles.advisor" "openai-codex/gpt-5.6-sol:medium"
   | setValueAtPath "defaultThinkingLevel" "high"
   | setValueAtPath "browser.relay" true
+  | setValueAtPath "spelling.typoDetection" false
   | setValueAtPath "task.enableEffort" false
   | setValueAtPath "task.agentModelOverrides.task" "@implementation"
   | setValueAtPath "task.agentModelOverrides.sonic" "@smol"
