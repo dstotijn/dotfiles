@@ -40,9 +40,6 @@
     "dstotijn/peer-consult": {
       "source": "dstotijn/agent-skills/skills/peer-consult"
     },
-    "dstotijn/plain-english": {
-      "source": "dstotijn/agent-skills/skills/plain-english"
-    },
     "dstotijn/tmux": {
       "source": "dstotijn/agent-skills/skills/tmux"
     },
