@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-metadata_seed={{ joinPath .chezmoi.sourceDir "dot_config/skillshare/metadata-seed.json" | quote }}
+metadata_seed="$HOME/.config/skillshare/metadata-seed.json"
 metadata_path="$HOME/.local/share/skillshare/skills/.metadata.json"
 
 # The seed decides which skills exist, but skillshare records more than the seed

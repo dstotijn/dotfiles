@@ -30,6 +30,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -x \"$HOME/.claude/hooks/herdr-agent-state.sh\" ]; then \"$HOME/.claude/hooks/herdr-agent-state.sh\" session; fi",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
