@@ -19,4 +19,5 @@
   | setValueAtPath "task.agentModelOverrides.scout" "@implementation"
   | setValueAtPath "task.agentModelOverrides.reviewer" "@review"
   | setValueAtPath "task.agentModelOverrides.security-reviewer" "@review"
+  | setValueAtPath "completion.notify" "off"
   | toYaml -}}
