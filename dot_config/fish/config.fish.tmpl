@@ -49,6 +49,7 @@ if status is-interactive
 end
 
 fish_add_path ~/.local/bin
+fish_add_path ~/.local/share/omp-bun/bin
 {{ if eq .chezmoi.os "darwin" }}
 {{ output "brew" "--prefix" | trim }}/bin/brew shellenv | source
 op completion fish | source

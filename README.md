@@ -58,7 +58,7 @@ chezmoi cd                 # Open shell in source directory
 | Herdr | `dot_config/herdr/config.toml`, `dot_config/mise/config.toml` | Agent terminal multiplexer, installed at a pinned version through mise |
 | Git | `dot_gitconfig.tmpl` | SSH signing, neovim editor (templated home dir paths) |
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
-| Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Go, Node, Python, npm packages) |
+| Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Bun, Go, Node, Python, npm packages) |
 | Worktrunk | `dot_config/worktrunk/config.toml`, `dot_config/fish/{functions,completions}/private_wt.fish` | Git worktrees under each repository's `.worktrees/` directory |
 | Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 | AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
@@ -97,8 +97,10 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 2. `run_onchange_00_linux-install.sh.tmpl` — (Linux) Installs apt packages, CLI tools, mise, Go tools, mcfly; sets fish as default shell
 3. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
 4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
+5. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
 
-These are Go templates that embed a hash of their dependency file to trigger re-execution on change.
+The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
+checks for a missing launcher on every `chezmoi apply`.
 
 ## Neovim Config Structure
 
@@ -107,6 +109,8 @@ Based on AstroNvim v4 template. Most plugin configs under `dot_config/nvim/lua/p
 ## Fish Shell Integrations
 
 The fish config (`dot_config/fish/config.fish.tmpl`) initializes tools in order: Homebrew (macOS only) → 1Password CLI (macOS only) → mise → starship → zoxide → mcfly. Git abbreviations are defined there (gp, gd, gco, gst, etc.).
+
+Mise pins Bun, and the OMP after-script installs `@oh-my-pi/pi-coding-agent` into a dedicated Bun global directory. The script only installs OMP when its launcher is missing. Run `omp update` to upgrade OMP; the Fish wrapper refreshes completions after an update. Chezmoi does not pin or replace OMP's version.
 
 Claude Code, Codex, Pi, OMP, and OpenCode2 are launched through Fish functions that inject the
 command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent commits use a
