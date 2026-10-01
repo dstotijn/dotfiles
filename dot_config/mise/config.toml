@@ -15,3 +15,4 @@ python = "3.14.6"
 worktrunk = "0.74.0"
 "npm:@opencode/cli" = { version = "beta", npm_args = "--ignore-scripts=false" }
 "github:herdrdev/herdr" = "0.9.1"
+bun = "1.4.2"
