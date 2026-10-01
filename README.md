@@ -113,3 +113,11 @@ command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent
 dedicated signing-only SSH key at `~/.ssh/id_ed25519_agent_signing`; interactive Git continues to
 use the 1Password signer. The private key stays outside chezmoi and is provisioned from 1Password
 as an unencrypted, mode `0600` file so native `ssh-keygen` can sign without OS-specific services.
+
+## OMP Configuration
+
+`dot_omp/private_agent/modify_private_config.yml` manages model routing while preserving
+machine-local settings. Default, implementation, and advisor roles use GPT-6.1 Sol with High
+reasoning; lightweight roles use GPT-6.1 Sol with Low reasoning. The slow role uses GPT-6 Astra
+with High reasoning. Per-task effort overrides are disabled, and worker cards show the resolved
+model ID. Assigning the advisor role does not enable the advisor.
