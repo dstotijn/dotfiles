@@ -114,6 +114,10 @@ Apply does not fetch newer skill revisions automatically. Skillshare's `version`
 records an installed revision; the seed's `branch` field selects the revision to install.
 Machine-local skills under the source's `local/` directory remain outside the public seed.
 
+For Matt Pocock's multi-ticket workflow, use `implement-spec` after `to-spec` and `to-tickets`.
+`code-review` checks standards and spec compliance separately. Use `retro` to review a coding
+session's agent environment, and `writing-for-agents` when editing skills or agent instructions.
+
 To update selected pins:
 
 ```fish

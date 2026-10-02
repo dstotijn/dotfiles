@@ -89,6 +89,10 @@
       "source": "mattpocock/skills/skills/engineering/ask-matt",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
+    "mattpocock/code-review": {
+      "source": "mattpocock/skills/skills/engineering/code-review",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+    },
     "mattpocock/codebase-design": {
       "source": "mattpocock/skills/skills/engineering/codebase-design",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
@@ -117,6 +121,10 @@
       "source": "mattpocock/skills/skills/engineering/implement",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
+    "mattpocock/implement-spec": {
+      "source": "mattpocock/skills/skills/engineering/implement-spec",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+    },
     "mattpocock/improve-codebase-architecture": {
       "source": "mattpocock/skills/skills/engineering/improve-codebase-architecture",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
@@ -128,6 +136,10 @@
     "mattpocock/research": {
       "source": "mattpocock/skills/skills/engineering/research",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/retro": {
+      "source": "mattpocock/skills/skills/engineering/retro",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "mattpocock/setup-matt-pocock-skills": {
       "source": "mattpocock/skills/skills/engineering/setup-matt-pocock-skills",
@@ -168,6 +180,10 @@
     "mattpocock/wizard": {
       "source": "mattpocock/skills/skills/engineering/wizard",
       "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/writing-for-agents": {
+      "source": "mattpocock/skills/skills/productivity/writing-for-agents",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "skillshare/skillshare": {
       "source": "runkids/skillshare/skills/skillshare",
