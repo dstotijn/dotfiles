@@ -97,10 +97,36 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 2. `run_onchange_00_linux-install.sh.tmpl` — (Linux) Installs apt packages, CLI tools, mise, Go tools, mcfly; sets fish as default shell
 3. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
 4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
-5. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
+5. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skill targets
+6. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
 
 The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
 checks for a missing launcher on every `chezmoi apply`.
+
+## Skillshare Pins
+
+`dot_config/skillshare/metadata-seed.json` declares the public skills and their full Git commit
+SHAs in the `branch` field. On macOS, the Skillshare lifecycle installs missing skills and
+replaces skills whose source or installed commit differs from the seed. Unchanged skills keep
+their runtime hashes and timestamps. Installation or audit failures stop the lifecycle.
+
+Apply does not fetch newer skill revisions automatically. Skillshare's `version` metadata
+records an installed revision; the seed's `branch` field selects the revision to install.
+Machine-local skills under the source's `local/` directory remain outside the public seed.
+
+To update selected pins:
+
+```fish
+~/.config/skillshare/update-pins.py anthropic/pdf dstotijn/go-dev
+```
+
+Use `--all` to update every declared skill. The command requires `gh` authentication and
+updates only the dotfiles seed to upstream default-branch commits. It prints comparison links;
+it does not install or sync anything. Review the upstream changes and `chezmoi diff` before
+running `chezmoi apply`.
+
+When working in a worktree, pass `--seed /path/to/worktree/dot_config/skillshare/metadata-seed.json`.
+Without `--seed`, the command uses the source directory reported by `chezmoi source-path`.
 
 ## Neovim Config Structure
 
