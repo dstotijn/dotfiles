@@ -13,6 +13,21 @@ Global instructions for AI coding agents.
 - When starting another agent harness, pass its task-specific context and constraints. Don't paste inherited system,
   repository, `AGENTS.md`, or skill instructions; the child harness receives them automatically.
 
+## Peer consultation
+
+- Use `peer-consult` only when the user requests a peer opinion. Keep its discussion and reporting workflow.
+- Drive the peer harness in a dedicated Herdr tab in the current workspace and working directory, with
+  `--no-focus`. This is the peer-consult layout even though ordinary Herdr delegation defaults to a sibling pane.
+- Load the `herdr` skill and the transport for the chosen peer: `~/.claude/skills/codex-peer-transport/SKILL.md`
+  for Codex, or `~/.codex/skills/claude-peer-transport/SKILL.md` for Claude Code. These transports also apply
+  when the driver is OMP, Pi, or OpenCode.
+- Honor the user's peer choice. Otherwise use Codex from Claude Code, and Claude Code from Codex or OMP.
+  If another driver has no clear cross-harness peer choice, ask which harness to consult.
+- Require `HERDR_ENV=1`; outside Herdr, report the missing transport rather than substituting tmux,
+  acpx, a headless process, or a native subagent.
+- Keep the peer read-only, continue the same live session for follow-ups, and close only the tab you
+  created once the consultation ends. The driver remains the only agent making changes.
+
 ## Scope Discipline
 
 - Only change what was asked for — don't refactor, "improve", or clean up surrounding code

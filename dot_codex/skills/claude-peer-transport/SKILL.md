@@ -1,112 +1,91 @@
 ---
 name: claude-peer-transport
 description: >
-  Run Claude Code as Codex's asynchronous, read-only peer for the peer-consult
-  workflow. Use whenever Codex invokes $peer-consult and Claude is the other
-  agent, especially when the user wants to watch Claude work in a tmux pane,
-  continue the same Claude session for follow-up rounds, and detect completion
-  without scraping terminal output.
+  Drive an interactive, read-only Claude Code peer in a dedicated Herdr tab for
+  the peer-consult workflow. Use whenever an agent invokes peer-consult with
+  Claude as the other harness, including Codex or OMP and same-session follow-ups.
 ---
 
 # Claude peer transport
 
-Use this skill only as the transport for `$peer-consult`. Follow `$peer-consult`
-for the brief, discussion, stopping rule, and final synthesis.
+Use this skill only as the transport for `peer-consult`. Follow `peer-consult`
+for the brief, discussion, stopping rule, and final synthesis. Load the `herdr`
+skill before issuing control commands; its live CLI discovery and safety rules
+apply. Peer consultation uses a dedicated tab, not Herdr's usual sibling-pane
+layout.
 
-The runner drives Claude Code through `acpx`, a client for the Agent Client
-Protocol, rather than through `claude -p` directly. Sessions, completion
-signalling, and permission enforcement are protocol features, so this skill no
-longer parses Claude's own event schema. `acpx` must be on `PATH`; it is pinned
-in mise.
+## Start the peer
 
-## Run a round
+Verify `HERDR_ENV=1`. Outside Herdr, report that the requested transport is
+unavailable and stop; do not fall back to tmux, acpx, a headless command, or a
+native subagent.
 
-Resolve `scripts/claude-peer` relative to this `SKILL.md`, then start Claude from
-the repository it must inspect. Pass the brief through a quoted heredoc so the
-shell cannot expand its contents.
+Create one background tab in the caller's workspace and current working
+directory. Keep the user's focus unchanged:
 
-```bash
-bash <skill-dir>/scripts/claude-peer start --cwd "$PWD" <<'CLAUDE_PEER_BRIEF'
-<complete peer-consult brief>
-CLAUDE_PEER_BRIEF
+```sh
+herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label claude-peer --no-focus
 ```
 
-The command returns JSON with `job_id`, `session`, `mode`, and `pane_id`.
-Inside tmux, `mode` is `tmux` and Claude streams into a visible pane. Outside
-tmux, it runs headlessly and records the same artifacts. The acpx session name is
-derived from the job ID rather than scraped from the stream, so a round stays
-addressable even if it dies early.
+Record `.result.tab.tab_id` and `.result.root_pane.pane_id` from the response.
+Never derive IDs from examples or sidebar order. Choose an unused live agent
+name such as `claude-peer-<short-suffix>`.
 
-Poll in bounded 30-second intervals so you can keep the user informed during a
-long run:
+Start Claude with only file-reading, searching, and web-reading tools. Plan mode
+alone is not a write boundary, especially when a shell wrapper adds permission
+bypass. The explicit tool allowlist omits shell execution and editing, and the
+strict empty MCP configuration, explicit MCP denial, and disabled Chrome
+integration remove external mutation tools:
 
-```bash
-bash <skill-dir>/scripts/claude-peer wait <job-id> 30
+```sh
+herdr agent start <unique-peer-name> --kind claude --pane <returned-pane-id> -- --permission-mode plan --tools Read,Glob,Grep,WebSearch,WebFetch --disallowedTools 'mcp__*' --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-chrome
 ```
 
-Codex does not deliver an independent completion notification when a yielded
-shell process exits. If the shell call returns a session or process handle
-before `wait` prints JSON, resume that same call until it exits. Do not detach
-`wait`, leave it orphaned, or start concurrent waits for the same round.
+If startup fails, inspect the recorded pane with `pane read`; the agent name
+may not exist yet. Do not launch a duplicate or relax permissions to bypass a
+startup error. Resolve the observed error before submitting the brief.
 
-When `wait` returns `running`, call it again. Treat `succeeded` as complete.
-Treat `failed` or `lost` as a failed peer round and report the returned paths
-or error. Read the peer's answer only after completion:
+Keep these restrictions on every launch. This peer can inspect code but cannot
+run shell commands or tests; the driver performs runtime checks. Tell the peer
+that it advises only: no file changes, external mutations, delegation, or
+further peer launches. Provide the complete task-specific brief and your current
+position; inherited instructions and skills need not be pasted.
 
-```bash
-bash <skill-dir>/scripts/claude-peer result <job-id>
+## Confer in the same session
+
+Submit the brief as one literal argument through the agent surface, not raw
+pane input. Quote it without shell expansion:
+
+```sh
+herdr agent prompt <unique-peer-name> '<complete brief>' --wait --timeout 120000
+herdr agent read <unique-peer-name> --source recent-unwrapped --lines 120
 ```
 
-Do not scrape the tmux pane. The completion contract is the ACP stop reason
-(`end_turn`) plus a non-empty answer. Note that `exit_code` 5 on an otherwise
-succeeded round means the peer reached for an edit and was denied; the advice is
-still usable, and it is worth mentioning to the user.
+The wait observes activity followed by a settled state; it is not proof that a
+usable answer exists. Read and evaluate the actual response. If the shell tool
+supports asynchronous completion, background the waiting call once and keep
+working; otherwise retain and resume the same process handle until it exits.
+Do not start overlapping waits or repeatedly poll.
 
-The pane shows text arriving in chunks as Claude writes, with tool calls listed
-by kind and title. Thinking is dimmed and is deliberately excluded from `result`.
+After a timeout, stalled prompt, or blocked state, inspect `agent get` and
+`agent read` before acting. A failed wait does not prove submission failed. If
+still working, use `agent wait` to finish the existing round rather than
+resubmitting. Never answer an approval or question UI on the user's behalf.
 
-## Run several peers at once
+Send follow-ups with `agent prompt` to the same live agent name and pane. Keep
+that tab open across rounds; a newly launched peer is not session continuity.
+If a larger read cannot recover the answer, ask for a concise restatement in
+the same session. Do not ask the read-only peer to write an output file.
 
-Jobs are fully independent: separate state directories, separate acpx sessions,
-separate results. Starting several is safe, but poll each job independently and
-never run overlapping waits for one job.
+## Finish
 
-The runner places each job where it stays readable. It splits a sibling pane
-while both halves would keep at least 80 columns, and opens a separate tmux
-window once they would not. So the first peer usually lands beside you and the
-rest land in their own windows. Tell the user which windows to look at instead
-of assuming everything is visible at once.
+Report the peer's contribution and your own decision under `peer-consult`.
+Then close only the tab you created, using its recorded ID:
 
-## Continue the same session
-
-When another round adds value under `$peer-consult`, resume the existing job:
-
-```bash
-bash <skill-dir>/scripts/claude-peer follow-up <job-id> <<'CLAUDE_PEER_FOLLOW_UP'
-<pushback, question, or request for verification>
-CLAUDE_PEER_FOLLOW_UP
+```sh
+herdr tab close <returned-tab-id>
 ```
 
-Then poll with bounded `wait` calls and read `result` again. `follow-up` prompts
-the same named acpx session, which keeps the conversation. Never start a fresh
-job to simulate continuity.
-
-## Boundaries
-
-- Let the runner enforce read-only access. Two layers do it: acpx denies every
-  tool class that is not explicitly allowed, and Claude runs in plan mode with a
-  per-job settings file that denies the editing tools and any MCP tool, and
-  sandboxes the working tree against writes. Writes fail at the OS level, not at
-  a prompt.
-- The settings file reaches Claude through `CLAUDE_CODE_EXECUTABLE`, because the
-  ACP adapter takes no settings flag of its own. Do not switch this to
-  `CLAUDE_CONFIG_DIR`: that loses the credentials and the adapter fails with
-  `AUTH_REQUIRED`.
-- The deny policy does not depend on there being no TTY, which matters because
-  the peer runs in a tmux pane. Do not replace it with
-  `--non-interactive-permissions` alone, and do not pass `--approve-all`.
-- Let tmux close the pane after Claude finishes. Read completed output through
-  `result`; the raw ACP stream remains available at the path returned by `wait`.
-- Do not substitute a Codex subagent. Native Codex subagents are useful, but
-  they are not a cross-model Claude consultation.
-- Stop conferring when `$peer-consult` says the discussion is done.
+Do not close another agent's tab or leave a peer running after the consultation
+is finished. For multiple explicitly requested peers, give each its own tab,
+unique agent name, and conversation.

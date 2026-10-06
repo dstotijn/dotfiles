@@ -74,6 +74,33 @@ chezmoi cd                 # Open shell in source directory
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/symlink_AGENTS.md.tmpl` |
 | `~/.pi/agent/AGENTS.md` | `dot_pi/agent/symlink_AGENTS.md.tmpl` |
 
+### Peer consultation
+
+Skillshare installs the shared `peer-consult` skill from
+`dstotijn/agent-skills/skills/peer-consult`; `dot_config/skillshare/metadata-seed.json`
+records that dependency. It defines the discussion workflow, not the transport.
+
+Dotfiles manage the transport skills directly:
+
+| Peer harness | Source path |
+|--------------|-------------|
+| Codex | `dot_claude/skills/codex-peer-transport/` |
+| Claude Code | `dot_codex/skills/claude-peer-transport/` |
+
+The shared agent instructions route user-requested consultations through these
+skills, including from OMP, Pi, and OpenCode. Each peer runs interactively in its
+own Herdr tab, in the driver's current workspace and directory, without changing
+focus. Follow-up rounds reuse the same live session. The driver reads the reply
+through `herdr agent read`, makes the decision, and closes its peer tab when done.
+Outside a Herdr-managed pane, consultation stops rather than silently using a
+headless process, tmux, or a native subagent.
+
+Codex uses a read-only sandbox with approvals disabled and each configured MCP
+server disabled explicitly. Claude uses a read/search-only tool allowlist with
+MCP and Chrome disabled; it cannot run shell commands or tests, so the driver
+performs runtime checks. The old acpx runners and stream renderers are retired,
+and `.chezmoiremove` removes their installed script directories.
+
 ### Machine-local instructions
 
 `.AGENTS.local.md` in the source root holds instructions for the current machine only. It is gitignored, so it never leaves the machine, and chezmoi never applies it as a target because dot-prefixed source entries are ignored. `dot_config/AGENTS.md.tmpl` appends its contents when the file exists:
