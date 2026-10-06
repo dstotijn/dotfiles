@@ -2,139 +2,200 @@
   "version": 1,
   "entries": {
     "anthropic/frontend-design": {
-      "source": "anthropics/skills/skills/frontend-design"
+      "source": "anthropics/skills/skills/frontend-design",
+      "branch": "34040c9c568585f6929bedeaad110ad08f079624"
     },
     "anthropic/mcp-builder": {
-      "source": "anthropics/skills/skills/mcp-builder"
+      "source": "anthropics/skills/skills/mcp-builder",
+      "branch": "34040c9c568585f6929bedeaad110ad08f079624"
     },
     "anthropic/pdf": {
-      "source": "anthropics/skills/skills/pdf"
+      "source": "anthropics/skills/skills/pdf",
+      "branch": "34040c9c568585f6929bedeaad110ad08f079624"
     },
     "anthropic/skill-creator": {
-      "source": "anthropics/skills/skills/skill-creator"
+      "source": "anthropics/skills/skills/skill-creator",
+      "branch": "34040c9c568585f6929bedeaad110ad08f079624"
     },
     "anthropic/webapp-testing": {
-      "source": "anthropics/skills/skills/webapp-testing"
+      "source": "anthropics/skills/skills/webapp-testing",
+      "branch": "34040c9c568585f6929bedeaad110ad08f079624"
     },
     "doist/todoist-cli": {
-      "source": "Doist/todoist-cli/skills/todoist-cli"
+      "source": "Doist/todoist-cli/skills/todoist-cli",
+      "branch": "f6dff23ade3b120aa8f986ad2ac337a245c418b5"
     },
     "dstotijn/dev-preferences": {
-      "source": "dstotijn/agent-skills/skills/dev-preferences"
+      "source": "dstotijn/agent-skills/skills/dev-preferences",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/github-review": {
-      "source": "dstotijn/agent-skills/skills/github-review"
+      "source": "dstotijn/agent-skills/skills/github-review",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/go-dev": {
-      "source": "dstotijn/agent-skills/skills/go-dev"
+      "source": "dstotijn/agent-skills/skills/go-dev",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/handoff": {
-      "source": "dstotijn/agent-skills/skills/handoff"
+      "source": "dstotijn/agent-skills/skills/handoff",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/hindsight": {
-      "source": "dstotijn/agent-skills/skills/hindsight"
+      "source": "dstotijn/agent-skills/skills/hindsight",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/mise": {
-      "source": "dstotijn/agent-skills/skills/mise"
+      "source": "dstotijn/agent-skills/skills/mise",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/peer-consult": {
-      "source": "dstotijn/agent-skills/skills/peer-consult"
+      "source": "dstotijn/agent-skills/skills/peer-consult",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/tmux": {
-      "source": "dstotijn/agent-skills/skills/tmux"
+      "source": "dstotijn/agent-skills/skills/tmux",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/tts": {
-      "source": "dstotijn/agent-skills/skills/tts"
+      "source": "dstotijn/agent-skills/skills/tts",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "dstotijn/worktree-cleanup": {
-      "source": "dstotijn/agent-skills/skills/worktree-cleanup"
+      "source": "dstotijn/agent-skills/skills/worktree-cleanup",
+      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
     },
     "googleworkspace/gws-sheets": {
-      "source": "googleworkspace/cli/skills/gws-sheets"
+      "source": "googleworkspace/cli/skills/gws-sheets",
+      "branch": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd"
     },
     "googleworkspace/gws-sheets-append": {
-      "source": "googleworkspace/cli/skills/gws-sheets-append"
+      "source": "googleworkspace/cli/skills/gws-sheets-append",
+      "branch": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd"
     },
     "googleworkspace/gws-sheets-read": {
-      "source": "googleworkspace/cli/skills/gws-sheets-read"
+      "source": "googleworkspace/cli/skills/gws-sheets-read",
+      "branch": "a3768d0e82ad83cca2da97724e46bea4ff0e6dbd"
     },
     "herdr": {
-      "source": "github.com/herdrdev/herdr/skills/herdr"
+      "source": "github.com/herdrdev/herdr/skills/herdr",
+      "branch": "c958833fa81333bf07a255f7d1325e6892daca1e"
     },
     "humanlayer/show-me": {
-      "source": "humanlayer/skills/show-me"
+      "source": "humanlayer/skills/plugins/show-me/skills/show-me",
+      "branch": "ca7c8088db69e315a8b2deea43820270457f8f3c"
     },
     "mattpocock/ask-matt": {
-      "source": "mattpocock/skills/skills/engineering/ask-matt"
+      "source": "mattpocock/skills/skills/engineering/ask-matt",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/code-review": {
+      "source": "mattpocock/skills/skills/engineering/code-review",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "mattpocock/codebase-design": {
-      "source": "mattpocock/skills/skills/engineering/codebase-design"
+      "source": "mattpocock/skills/skills/engineering/codebase-design",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/diagnosing-bugs": {
-      "source": "mattpocock/skills/skills/engineering/diagnosing-bugs"
+      "source": "mattpocock/skills/skills/engineering/diagnosing-bugs",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/domain-modeling": {
-      "source": "mattpocock/skills/skills/engineering/domain-modeling"
+      "source": "mattpocock/skills/skills/engineering/domain-modeling",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/grill-me": {
-      "source": "mattpocock/skills/skills/productivity/grill-me"
+      "source": "mattpocock/skills/skills/productivity/grill-me",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/grill-with-docs": {
-      "source": "mattpocock/skills/skills/engineering/grill-with-docs"
+      "source": "mattpocock/skills/skills/engineering/grill-with-docs",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/grilling": {
-      "source": "mattpocock/skills/skills/productivity/grilling"
+      "source": "mattpocock/skills/skills/productivity/grilling",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/implement": {
-      "source": "mattpocock/skills/skills/engineering/implement"
+      "source": "mattpocock/skills/skills/engineering/implement",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/implement-spec": {
+      "source": "mattpocock/skills/skills/engineering/implement-spec",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "mattpocock/improve-codebase-architecture": {
-      "source": "mattpocock/skills/skills/engineering/improve-codebase-architecture"
+      "source": "mattpocock/skills/skills/engineering/improve-codebase-architecture",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/prototype": {
-      "source": "mattpocock/skills/skills/engineering/prototype"
+      "source": "mattpocock/skills/skills/engineering/prototype",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/research": {
-      "source": "mattpocock/skills/skills/engineering/research"
+      "source": "mattpocock/skills/skills/engineering/research",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/retro": {
+      "source": "mattpocock/skills/skills/engineering/retro",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "mattpocock/setup-matt-pocock-skills": {
-      "source": "mattpocock/skills/skills/engineering/setup-matt-pocock-skills"
+      "source": "mattpocock/skills/skills/engineering/setup-matt-pocock-skills",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/tdd": {
-      "source": "mattpocock/skills/skills/engineering/tdd"
+      "source": "mattpocock/skills/skills/engineering/tdd",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/teach": {
-      "source": "mattpocock/skills/skills/productivity/teach"
+      "source": "mattpocock/skills/skills/productivity/teach",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/to-questionnaire": {
-      "source": "mattpocock/skills/skills/productivity/to-questionnaire"
+      "source": "mattpocock/skills/skills/productivity/to-questionnaire",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/to-spec": {
-      "source": "mattpocock/skills/skills/engineering/to-spec"
+      "source": "mattpocock/skills/skills/engineering/to-spec",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/to-tickets": {
-      "source": "mattpocock/skills/skills/engineering/to-tickets"
+      "source": "mattpocock/skills/skills/engineering/to-tickets",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/triage": {
-      "source": "mattpocock/skills/skills/engineering/triage"
+      "source": "mattpocock/skills/skills/engineering/triage",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/wait-what": {
-      "source": "mattpocock/skills/skills/productivity/wait-what"
+      "source": "mattpocock/skills/skills/productivity/wait-what",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/wayfinder": {
-      "source": "mattpocock/skills/skills/engineering/wayfinder"
+      "source": "mattpocock/skills/skills/engineering/wayfinder",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
     },
     "mattpocock/wizard": {
-      "source": "mattpocock/skills/skills/engineering/wizard"
+      "source": "mattpocock/skills/skills/engineering/wizard",
+      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+    },
+    "mattpocock/writing-for-agents": {
+      "source": "mattpocock/skills/skills/productivity/writing-for-agents",
+      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
     },
     "skillshare/skillshare": {
-      "source": "runkids/skillshare/skills/skillshare"
+      "source": "runkids/skillshare/skills/skillshare",
+      "branch": "607befe65c498be698cd258ad58e765a4aaadf94"
     },
     "tuicr": {
-      "source": "agavra/tuicr/skills/tuicr"
+      "source": "agavra/tuicr/skills/tuicr",
+      "branch": "fbc3cfce47e70e5ebba21b6df8de48daf16da029"
     },
     "vercel/agent-browser": {
-      "source": "vercel-labs/agent-browser/skills/agent-browser"
+      "source": "vercel-labs/agent-browser/skills/agent-browser",
+      "branch": "d01253d9db28d75080e36da3c1c31ef89454731e"
     }
   }
 }

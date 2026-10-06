@@ -3,50 +3,105 @@
 
 # Skillshare config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
 # Public metadata seed hash: {{ include "dot_config/skillshare/metadata-seed.json" | sha256sum }}
+# Mise config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
 
 set -euo pipefail
 
 metadata_seed="$HOME/.config/skillshare/metadata-seed.json"
-metadata_path="$HOME/.local/share/skillshare/skills/.metadata.json"
+# Reconcile content before publishing seed pins; keep hashes and timestamps for
+# installed revisions that already match. A failed install or audit stops sync.
+mise exec -- python3 - "$metadata_seed" <<'PY'
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+from urllib.parse import urlsplit
 
-# The seed decides which skills exist, but skillshare records more than the seed
-# can carry: pinned commits, tree hashes and per-file hashes that make
-# `skillshare check` meaningful. Keep that richer metadata for entries still in
-# the seed; entries no longer listed are dropped.
-merge_metadata() {
-  python3 - "$metadata_seed" "$metadata_path" <<'PY'
-import json, os, sys
-
-seed_path, meta_path = sys.argv[1], sys.argv[2]
-with open(seed_path) as f:
+with open(sys.argv[1]) as f:
     seed = json.load(f)
-try:
-    with open(meta_path) as f:
-        live_entries = json.load(f).get("entries", {})
-except (FileNotFoundError, ValueError):
-    live_entries = {}
 
-# An installed entry is richer than its seed counterpart, so it wins. Changing a
-# seed source therefore needs the stale entry removed by hand.
-merged = {name: live_entries.get(name, entry) for name, entry in seed["entries"].items()}
+status = subprocess.run(
+    ["skillshare", "status", "--global", "--json"],
+    check=True, capture_output=True, text=True,
+)
+source_dir = Path(json.loads(status.stdout)["source"]["path"]).expanduser()
+metadata_path = source_dir / ".metadata.json"
 
-os.makedirs(os.path.dirname(meta_path), exist_ok=True)
-with open(meta_path, "w") as f:
-    json.dump({"version": seed.get("version", 1), "entries": dict(sorted(merged.items()))}, f, indent=2)
+
+def load_entries():
+    try:
+        with metadata_path.open() as f:
+            return json.load(f).get("entries", {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def canonical_source(source):
+    value = source.strip().rstrip("/")
+    if value.startswith(("https://", "http://")):
+        url = urlsplit(value)
+        if url.hostname != "github.com":
+            return value
+        value = url.path.strip("/")
+    elif value.startswith("github.com/"):
+        value = value[len("github.com/"):]
+    parts = value.split("/")
+    if len(parts) < 2:
+        return value
+    owner, repo = parts[:2]
+    if repo.endswith(".git"):
+        repo = repo[:-4]
+    return "/".join([owner.lower(), repo.lower()] + parts[2:])
+
+
+def is_current(name, entry, selected):
+    version = entry.get("commit") or entry.get("version", "")
+    return (
+        (source_dir / name / "SKILL.md").is_file()
+        and canonical_source(entry.get("source", "")) == canonical_source(selected["source"])
+        and re.fullmatch(r"[0-9a-f]{7,40}", version) is not None
+        and selected["branch"].startswith(version)
+    )
+
+
+live_entries = load_entries()
+reconciled = {}
+for name, selected in seed["entries"].items():
+    if re.fullmatch(r"[0-9a-f]{40}", selected["branch"]) is None:
+        sys.exit(f"Skillshare seed has no full commit pin for {name}")
+    entry = live_entries.get(name, {})
+    if not is_current(name, entry, selected):
+        group, _, skill_name = name.rpartition("/")
+        command = [
+            "skillshare", "install", selected["source"],
+            "--branch", selected["branch"], "--name", skill_name,
+            "--kind", "skill", "--global", "--json", "--update",
+        ]
+        if group:
+            command.extend(["--into", group])
+        # JSON enables overwrite without overriding audits; update stages the
+        # replacement until its audit passes, preserving an existing install.
+        subprocess.run(command, check=True)
+        live_entries = load_entries()
+        entry = live_entries.get(name, {})
+        if not is_current(name, entry, selected):
+            sys.exit(f"Skillshare did not install the selected source and commit for {name}")
+    reconciled[name] = {**entry, "source": selected["source"], "branch": selected["branch"]}
+
+# Only metadata is pruned. Unrelated and metadata-free local directories stay.
+source_dir.mkdir(parents=True, exist_ok=True)
+with tempfile.NamedTemporaryFile(mode="w", dir=source_dir, delete=False) as f:
+    temp_path = f.name
+    json.dump(
+        {"version": seed.get("version", 1), "entries": dict(sorted(reconciled.items()))},
+        f, indent=2,
+    )
     f.write("\n")
+os.replace(temp_path, metadata_path)
+
+subprocess.run(["skillshare", "sync", "--global"], check=True)
 PY
-}
-
-merge_metadata
-
-if ! mise exec -- skillshare install --global; then
-  echo "Skillshare install failed; continuing with existing skills." >&2
-fi
-if ! mise exec -- skillshare update --all --global; then
-  echo "Skillshare update failed; continuing with existing skills." >&2
-fi
-
-merge_metadata
-
-mise exec -- skillshare sync --global
 {{ end -}}
