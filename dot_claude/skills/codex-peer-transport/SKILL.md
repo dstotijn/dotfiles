@@ -31,21 +31,48 @@ Record `.result.tab.tab_id` and `.result.root_pane.pane_id` from the response.
 Never derive IDs from examples or sidebar order. Choose an unused live agent
 name such as `codex-peer-<short-suffix>`.
 
-The read-only shell sandbox does not constrain MCP tools. List the configured
-MCP server names without exposing their settings:
+The read-only shell sandbox does not constrain MCP tools. Build native options
+as an argument list, not a shell command string. Set `peer_name` to the unique
+name and `peer_pane` to the returned pane ID. Run the preparation and launch
+blocks in one Fish script so the variables stay in scope:
 
-```sh
-codex mcp list --json | jq -r '.[].name'
+```fish
+set -l codex_bin (mise -C "$HOME" which codex); or exit 1
+set -l mcp_json ($codex_bin mcp list --json); or exit 1
+set -l mcp_names (printf '%s\n' $mcp_json | jq -r '.[].name'); or exit 1
+set -l peer_args --sandbox read-only --ask-for-approval never --no-alt-screen --disable apps
+for server in $mcp_names
+  set -a peer_args -c "mcp_servers.$server.enabled=false"
+end
 ```
 
-If discovery fails, stop rather than launching with unknown tool access. For
-every listed name, append `-c 'mcp_servers.<name>.enabled=false'` to the native
-arguments below. An empty `mcp_servers={}` override does not clear inherited
-servers. With no configured servers, no extra arguments are needed.
+Resolve Codex according to machine-local binary instructions; the example uses
+the global mise install for discovery without changing the peer's directory.
+If discovery fails, stop rather than launching with unknown tool access.
+Keep `--disable apps`: Codex's built-in app connectors are separate from the
+configured MCP servers and can otherwise expose mutation tools.
 
-```sh
-herdr agent start <unique-peer-name> --kind codex --pane <returned-pane-id> -- --sandbox read-only --ask-for-approval never --no-alt-screen <MCP-disable-args>
+Apply any requested or machine-local model and reasoning overrides to the
+`peer_args` list between the preparation block above and launch block below;
+keep those options as separate elements too.
+
+In Fish, expand the list as `$peer_args`, not `"$peer_args"` or a joined string.
+For Bash, use an array and `"${peer_args[@]}"`. Each `-c` and its TOML assignment
+must be two separate arguments. An empty `mcp_servers={}` override does not
+clear inherited servers.
+
+```fish
+herdr agent start "$peer_name" --kind codex --pane "$peer_pane" -- $peer_args
 ```
+
+Before submitting any brief, inspect `.result.argv` from `agent start`. It must
+contain the sandbox, approval, and `--disable apps` options separately, a separate
+`"-c"` and `"mcp_servers.<name>.enabled=false"` pair for every discovered server,
+and any requested model/reasoning overrides as separate arguments.
+There must be no combined flag string or positional prompt. A successful
+startup alone does not prove those options were parsed correctly. If the
+arguments are wrong, stop the peer without sending a brief and correct the
+argument construction before relaunching; do not repair it with a prompt.
 
 If startup fails, inspect the recorded pane with `pane read`; the agent name
 may not exist yet. Do not launch a duplicate or relax permissions to bypass a

@@ -95,11 +95,13 @@ through `herdr agent read`, makes the decision, and closes its peer tab when don
 Outside a Herdr-managed pane, consultation stops rather than silently using a
 headless process, tmux, or a native subagent.
 
-Codex uses a read-only sandbox with approvals disabled and each configured MCP
-server disabled explicitly. Claude uses a read/search-only tool allowlist with
-MCP and Chrome disabled; it cannot run shell commands or tests, so the driver
-performs runtime checks. The old acpx runners and stream renderers are retired,
-and `.chezmoiremove` removes their installed script directories.
+Codex uses a read-only sandbox with approvals disabled, built-in app connectors
+disabled, and each configured MCP server disabled explicitly. Its transport builds
+native options as a Fish argument list, not a quoted flag bundle, and checks
+Herdr's returned `argv` before submitting the brief. Claude uses a read/search-only
+tool allowlist with MCP and Chrome disabled; it cannot run shell commands or tests,
+so the driver performs runtime checks. The old acpx runners and stream renderers
+are retired, and `.chezmoiremove` removes their installed script directories.
 
 ### Machine-local instructions
 
@@ -174,6 +176,14 @@ command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent
 dedicated signing-only SSH key at `~/.ssh/id_ed25519_agent_signing`; interactive Git continues to
 use the 1Password signer. The private key stays outside chezmoi and is provisioned from 1Password
 as an unencrypted, mode `0600` file so native `ssh-keygen` can sign without OS-specific services.
+
+## Codex Configuration
+
+`dot_codex/modify_private_config.toml` enforces GPT-6.1 Sol with medium reasoning,
+alongside the existing global approval and sandbox defaults. The partial-file
+modifier preserves profiles, MCP settings, and other machine-specific state.
+Machine-local instructions can select high reasoning explicitly for Codex peer
+reviews without changing the normal medium-reasoning default.
 
 ## OMP Configuration
 

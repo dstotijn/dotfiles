@@ -1,11 +1,17 @@
 #!/bin/sh
 
-# Enforce Codex's global no-approval, full-access defaults without managing the whole config.
+# Enforce Codex's global model, reasoning, no-approval, and full-access defaults.
 # Codex also stores machine-specific state here, which this partial-file modifier preserves.
 
 awk '
 function add_missing_settings() {
-    missing_settings = !approval_policy_set || !sandbox_mode_set
+    missing_settings = !model_set || !model_reasoning_effort_set || !approval_policy_set || !sandbox_mode_set
+    if (!model_set) {
+        print "model = \"gpt-6.1-sol\""
+    }
+    if (!model_reasoning_effort_set) {
+        print "model_reasoning_effort = \"medium\""
+    }
     if (!approval_policy_set) {
         print "approval_policy = \"never\""
     }
@@ -16,6 +22,18 @@ function add_missing_settings() {
         print ""
     }
     settings_added = 1
+}
+
+in_root && /^model[[:space:]]*=/ {
+    print "model = \"gpt-6.1-sol\""
+    model_set = 1
+    next
+}
+
+in_root && /^model_reasoning_effort[[:space:]]*=/ {
+    print "model_reasoning_effort = \"medium\""
+    model_reasoning_effort_set = 1
+    next
 }
 
 in_root && /^approval_policy[[:space:]]*=/ {
