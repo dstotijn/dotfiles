@@ -1,17 +1,12 @@
 {
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
   "attribution": {
     "commit": "",
     "pr": ""
   },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
   "model": "opus[1m]",
-  "teammateMode": "in-process",
-  "statusLine": {
-    "type": "command",
-    "command": "~/.claude/scripts/statusline.sh"
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -73,6 +68,10 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/scripts/statusline.sh"
+  },
   "enabledPlugins": {
     "codex@openai-codex": true
   },
@@ -85,9 +84,15 @@
     }
   },
   "feedbackDrafts": "off",
-  "skipDangerousModePermissionPrompt": true,
-  "autoMemoryEnabled": false,
-  "preferredNotifChannel": "ghostty",
   "effortLevel": "high",
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "autoMemoryEnabled": false,
+  "skipDangerousModePermissionPrompt": true,
+  "preferredNotifChannel": "ghostty",
+  "teammateMode": "in-process",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  }
 }
