@@ -6,7 +6,7 @@
 set -euo pipefail
 
 name=alink
-label="alink inbox"
+label=alink
 cwd="${ALINK_AGENT_CWD:-$HOME}"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/alink-agent"
 session_file="$state_dir/claude-session-id"
