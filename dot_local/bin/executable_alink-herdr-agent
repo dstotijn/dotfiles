@@ -42,8 +42,8 @@ herdr workspace list |
 pane_id=$(herdr workspace create --cwd "$cwd" --label "$label" --no-focus | jq -r '.result.root_pane.pane_id')
 
 # `command` skips an interactive shell wrapper that may force
-# --dangerously-skip-permissions; this agent must ask before acting.
-command="command claude --permission-mode default --allowedTools 'Bash(alink:*)' Monitor --append-system-prompt-file '$role_file'"
+# --dangerously-skip-permissions; this agent runs in auto mode instead.
+command="command claude --permission-mode auto --allowedTools 'Bash(alink:*)' Monitor --append-system-prompt-file '$role_file'"
 session_id=$(cat "$session_file" 2>/dev/null || true)
 if [ -n "$session_id" ]; then
   command+=" --resume $session_id"
