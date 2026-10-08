@@ -7,3 +7,8 @@ tmp/**
 {{- if ne .chezmoi.os "linux" }}
 .terminfo/**
 {{- end }}
+
+{{- if ne .chezmoi.os "darwin" }}
+Library/LaunchAgents/**
+.local/bin/alink-herdr-agent
+{{- end }}

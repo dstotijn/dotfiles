@@ -1,0 +1,13 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# Reload launchd agents when their definitions change.
+# com.github.dstotijn.alink.plist hash: {{ include "private_Library/LaunchAgents/com.github.dstotijn.alink.plist.tmpl" | sha256sum }}
+# com.github.dstotijn.alink-herdr-agent.plist hash: {{ include "private_Library/LaunchAgents/com.github.dstotijn.alink-herdr-agent.plist.tmpl" | sha256sum }}
+set -eu
+
+domain="gui/$(id -u)"
+for label in com.github.dstotijn.alink com.github.dstotijn.alink-herdr-agent; do
+  launchctl bootout "$domain/$label" 2>/dev/null || true
+  launchctl bootstrap "$domain" "$HOME/Library/LaunchAgents/$label.plist"
+done
+{{ end -}}
