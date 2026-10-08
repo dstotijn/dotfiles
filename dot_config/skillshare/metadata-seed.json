@@ -25,6 +25,10 @@
       "source": "Doist/todoist-cli/skills/todoist-cli",
       "branch": "f6dff23ade3b120aa8f986ad2ac337a245c418b5"
     },
+    "dstotijn/alink": {
+      "source": "dstotijn/alink/skills/alink",
+      "branch": "ed0a51c160fffc051855b3833559b11f3b32953c"
+    },
     "dstotijn/dev-preferences": {
       "source": "dstotijn/agent-skills/skills/dev-preferences",
       "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
