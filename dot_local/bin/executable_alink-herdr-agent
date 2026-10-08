@@ -39,19 +39,28 @@ herdr workspace list |
 
 pane_id=$(herdr workspace create --cwd "$cwd" --label "$label" --no-focus | jq -r '.result.root_pane.pane_id')
 
-claude_args=(--permission-mode default --allowedTools 'Bash(alink:*)' Monitor)
+# `command` skips an interactive shell wrapper that may force
+# --dangerously-skip-permissions; this agent must ask before acting.
+command="command claude --permission-mode default --allowedTools 'Bash(alink:*)' Monitor"
 session_id=$(cat "$session_file" 2>/dev/null || true)
 if [ -n "$session_id" ]; then
-  claude_args+=(--resume "$session_id")
+  command+=" --resume $session_id"
 fi
 
-# Give the pane's shell time to reach its prompt; agent start requires it.
+# Give the pane's shell time to reach its prompt.
 sleep 3
-if ! herdr agent start "$name" --kind claude --pane "$pane_id" --timeout 60000 -- "${claude_args[@]}" >/dev/null; then
+herdr pane run "$pane_id" "$command" >/dev/null
+for _ in $(seq 30); do
+  herdr agent get "$pane_id" >/dev/null 2>&1 && break
+  sleep 2
+done
+if ! herdr agent rename "$pane_id" "$name" >/dev/null 2>&1; then
   # A stale session ID is the likely cause. Retry fresh on the next run.
   rm -f "$session_file"
   exit 1
 fi
 
+# Startup can briefly show a blocking notice; prompt once it accepts input.
+herdr agent wait "$name" --until idle --until done --timeout 60000 >/dev/null
 herdr agent prompt "$name" "$prompt" >/dev/null
 herdr agent get "$name" | jq -r '.result.agent.agent_session.value // empty' >"$session_file"
