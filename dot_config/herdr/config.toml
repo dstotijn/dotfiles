@@ -22,6 +22,7 @@ next_agent = "prefix+alt+n"
 focus_agent = "prefix+alt+1..9"
 previous_workspace = "shift+f2"
 next_workspace = "shift+f1"
+new_workspace = ["prefix+n", "prefix+shift+n"]
 
 previous_tab = ["prefix+shift+h", "shift+f5"]
 next_tab = ["prefix+shift+l", "shift+f6", "shift+f11"]
