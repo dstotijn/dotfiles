@@ -26,7 +26,7 @@ new_workspace = ["prefix+n", "prefix+shift+n"]
 
 previous_tab = ["prefix+shift+h", "shift+f5"]
 next_tab = ["prefix+shift+l", "shift+f6", "shift+f11"]
-new_tab = ["prefix+c", "shift+f8"]
+new_tab = ["prefix+t", "prefix+c", "shift+f8"]
 
 cycle_pane_next = ["prefix+tab", "shift+f3"]
 cycle_pane_previous = ["prefix+shift+tab", "shift+f4"]
