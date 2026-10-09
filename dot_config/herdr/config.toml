@@ -23,14 +23,14 @@ focus_agent = "prefix+alt+1..9"
 previous_workspace = "shift+f2"
 next_workspace = "shift+f1"
 
-previous_tab = "prefix+shift+h"
-next_tab = ["prefix+shift+l", "shift+f11"]
+previous_tab = ["prefix+shift+h", "shift+f5"]
+next_tab = ["prefix+shift+l", "shift+f6", "shift+f11"]
 new_tab = ["prefix+c", "shift+f8"]
 
 cycle_pane_next = ["prefix+tab", "shift+f3"]
 cycle_pane_previous = ["prefix+shift+tab", "shift+f4"]
-focus_pane_left = ["prefix+h", "shift+f5"]
-focus_pane_right = ["prefix+l", "shift+f6"]
+focus_pane_left = "prefix+h"
+focus_pane_right = "prefix+l"
 
 split_vertical = ["prefix+v", "shift+f9"]
 split_horizontal = ["prefix+s", "shift+f10"]
