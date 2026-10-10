@@ -91,103 +91,103 @@
     },
     "mattpocock/ask-matt": {
       "source": "mattpocock/skills/skills/engineering/ask-matt",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/code-review": {
       "source": "mattpocock/skills/skills/engineering/code-review",
-      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/codebase-design": {
       "source": "mattpocock/skills/skills/engineering/codebase-design",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/diagnosing-bugs": {
       "source": "mattpocock/skills/skills/engineering/diagnosing-bugs",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/domain-modeling": {
       "source": "mattpocock/skills/skills/engineering/domain-modeling",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/grill-me": {
       "source": "mattpocock/skills/skills/productivity/grill-me",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/grill-with-docs": {
       "source": "mattpocock/skills/skills/engineering/grill-with-docs",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/grilling": {
       "source": "mattpocock/skills/skills/productivity/grilling",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/implement": {
       "source": "mattpocock/skills/skills/engineering/implement",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/implement-spec": {
       "source": "mattpocock/skills/skills/engineering/implement-spec",
-      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/improve-codebase-architecture": {
       "source": "mattpocock/skills/skills/engineering/improve-codebase-architecture",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/prototype": {
       "source": "mattpocock/skills/skills/engineering/prototype",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/research": {
       "source": "mattpocock/skills/skills/engineering/research",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/retro": {
       "source": "mattpocock/skills/skills/engineering/retro",
-      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/setup-matt-pocock-skills": {
       "source": "mattpocock/skills/skills/engineering/setup-matt-pocock-skills",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/tdd": {
       "source": "mattpocock/skills/skills/engineering/tdd",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/teach": {
       "source": "mattpocock/skills/skills/productivity/teach",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/to-questionnaire": {
       "source": "mattpocock/skills/skills/productivity/to-questionnaire",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/to-spec": {
       "source": "mattpocock/skills/skills/engineering/to-spec",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/to-tickets": {
       "source": "mattpocock/skills/skills/engineering/to-tickets",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/triage": {
       "source": "mattpocock/skills/skills/engineering/triage",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/wait-what": {
       "source": "mattpocock/skills/skills/productivity/wait-what",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/wayfinder": {
       "source": "mattpocock/skills/skills/engineering/wayfinder",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/wizard": {
       "source": "mattpocock/skills/skills/engineering/wizard",
-      "branch": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/writing-for-agents": {
       "source": "mattpocock/skills/skills/productivity/writing-for-agents",
-      "branch": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "skillshare/skillshare": {
       "source": "runkids/skillshare/skills/skillshare",
