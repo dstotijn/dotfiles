@@ -4,6 +4,13 @@ onboarding = false
 name = "catppuccin"
 auto_switch = false
 
+[theme.custom]
+sidebar_bg = "#181825"
+active_row_bg = "#1e1e2e"
+selection_bg = "#313244"
+accent = "#6c6f93"
+overlay0 = "#45475a"
+
 [terminal]
 new_cwd = "follow"
 
