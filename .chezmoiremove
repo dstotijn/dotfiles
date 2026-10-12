@@ -2,3 +2,5 @@
 .config/skillshare/skills
 .config/fish/functions/opencode.fish
 .config/git/agent-ssh-sign
+.claude/skills/codex-peer-transport/scripts
+.codex/skills/claude-peer-transport/scripts

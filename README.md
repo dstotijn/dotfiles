@@ -62,6 +62,7 @@ chezmoi cd                 # Open shell in source directory
 | Worktrunk | `dot_config/worktrunk/config.toml`, `dot_config/fish/{functions,completions}/private_wt.fish` | Git worktrees under each repository's `.worktrees/` directory |
 | Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 | AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
+| OMP extensions | `dot_omp/private_agent/private_extensions/wtx.ts` | `/wtx` coordinates Worktrunk checkouts, Herdr workspaces, OMP relocation, and reverse cleanup |
 
 ## AI Agent Instructions
 
@@ -73,6 +74,35 @@ chezmoi cd                 # Open shell in source directory
 | `~/.codex/AGENTS.md` | `dot_codex/symlink_AGENTS.md.tmpl` |
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/symlink_AGENTS.md.tmpl` |
 | `~/.pi/agent/AGENTS.md` | `dot_pi/agent/symlink_AGENTS.md.tmpl` |
+
+### Peer consultation
+
+Skillshare installs the shared `peer-consult` skill from
+`dstotijn/agent-skills/skills/peer-consult`; `dot_config/skillshare/metadata-seed.json`
+records that dependency. It defines the discussion workflow, not the transport.
+
+Dotfiles manage the transport skills directly:
+
+| Peer harness | Source path |
+|--------------|-------------|
+| Codex | `dot_claude/skills/codex-peer-transport/` |
+| Claude Code | `dot_codex/skills/claude-peer-transport/` |
+
+The shared agent instructions route user-requested consultations through these
+skills, including from OMP, Pi, and OpenCode. Each peer runs interactively in its
+own Herdr tab, in the driver's current workspace and directory, without changing
+focus. Follow-up rounds reuse the same live session. The driver reads the reply
+through `herdr agent read`, makes the decision, and closes its peer tab when done.
+Outside a Herdr-managed pane, consultation stops rather than silently using a
+headless process, tmux, or a native subagent.
+
+Codex uses a read-only sandbox with approvals disabled, built-in app connectors
+disabled, and each configured MCP server disabled explicitly. Its transport builds
+native options as a Fish argument list, not a quoted flag bundle, and checks
+Herdr's returned `argv` before submitting the brief. Claude uses a read/search-only
+tool allowlist with MCP and Chrome disabled; it cannot run shell commands or tests,
+so the driver performs runtime checks. The old acpx runners and stream renderers
+are retired, and `.chezmoiremove` removes their installed script directories.
 
 ### Machine-local instructions
 
@@ -147,6 +177,14 @@ command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent
 dedicated signing-only SSH key at `~/.ssh/id_ed25519_agent_signing`; interactive Git continues to
 use the 1Password signer. The private key stays outside chezmoi and is provisioned from 1Password
 as an unencrypted, mode `0600` file so native `ssh-keygen` can sign without OS-specific services.
+
+## Codex Configuration
+
+`dot_codex/modify_private_config.toml` enforces GPT-6.1 Sol with medium reasoning,
+alongside the existing global approval and sandbox defaults. The partial-file
+modifier preserves profiles, MCP settings, and other machine-specific state.
+Machine-local instructions can select high reasoning explicitly for Codex peer
+reviews without changing the normal medium-reasoning default.
 
 ## OMP Configuration
 
