@@ -13,6 +13,23 @@ Global instructions for AI coding agents.
 - When starting another agent harness, pass its task-specific context and constraints. Don't paste inherited system,
   repository, `AGENTS.md`, or skill instructions; the child harness receives them automatically.
 
+## Delegating standalone work
+
+- Inside Herdr (`HERDR_ENV=1`), hand standalone work to a fresh agent in its own Herdr workspace. Standalone
+  work is a separate fix, PR, or investigation that needs its own branch. Load the `herdr` skill, then:
+  1. Create or reuse the worktree with `wt`.
+  2. Open it under the workspace of the repository's primary checkout with
+     `herdr worktree open --workspace <id> --path <worktree> --label <label> --no-focus`. Find that workspace
+     with `herdr workspace list`, and create it with `herdr workspace create --cwd <checkout> --no-focus` if
+     it is missing.
+  3. Start the harness you are running in the new workspace's root pane with
+     `herdr agent start <name> --kind <kind> --pane <root pane id>`, then send it the task with
+     `herdr agent prompt`.
+  4. Report the workspace and agent name. Keep focus where it is.
+- Do not use the native subagent tool for standalone work. Keep native subagents for short read-only
+  lookups that feed the current task.
+- Outside Herdr, use a native subagent or do the work in the current session.
+
 ## Peer consultation
 
 - Use `peer-consult` only when the user requests a peer opinion. Keep its discussion and reporting workflow.
