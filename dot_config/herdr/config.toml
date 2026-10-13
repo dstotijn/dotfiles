@@ -61,5 +61,5 @@ delivery = "system"
 
 [ui.sound]
 enabled = true
-# Herdr warns for non-MP3 paths, but macOS plays custom sounds through afplay.
-path = "/System/Library/Sounds/Frog.aiff"
+# Relative to this directory; run_after_08_herdr-sound converts Frog.aiff to MP3 here.
+path = "sounds/frog.mp3"

@@ -1,0 +1,18 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+# Herdr only accepts MP3 notification sounds, and macOS ships its sounds as AIFF.
+# The config points at this file relative to ~/.config/herdr.
+source_file="/System/Library/Sounds/Frog.aiff"
+sound_file="$HOME/.config/herdr/sounds/frog.mp3"
+
+if [ ! -f "$sound_file" ] || [ "$source_file" -nt "$sound_file" ]; then
+  mkdir -p "$(dirname "$sound_file")"
+  temp_file="$(mktemp "${sound_file}.XXXXXX")"
+  trap 'rm -f "$temp_file"' EXIT
+  /opt/homebrew/bin/lame --quiet --preset standard "$source_file" "$temp_file"
+  mv "$temp_file" "$sound_file"
+fi
+{{ end -}}

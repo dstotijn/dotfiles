@@ -129,6 +129,7 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
 5. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skill targets
 6. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
+7. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
 
 The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
 checks for a missing launcher on every `chezmoi apply`.
