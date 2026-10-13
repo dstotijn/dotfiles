@@ -11,4 +11,5 @@ tmp/**
 {{- if ne .chezmoi.os "darwin" }}
 Library/LaunchAgents/**
 .local/bin/alink-herdr-agent
+.local/bin/alink-claude-nudge
 {{- end }}
