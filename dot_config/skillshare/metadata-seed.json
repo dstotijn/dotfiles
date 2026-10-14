@@ -31,43 +31,43 @@
     },
     "dstotijn/dev-preferences": {
       "source": "dstotijn/agent-skills/skills/dev-preferences",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/github-review": {
       "source": "dstotijn/agent-skills/skills/github-review",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/go-dev": {
       "source": "dstotijn/agent-skills/skills/go-dev",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/handoff": {
       "source": "dstotijn/agent-skills/skills/handoff",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/hindsight": {
       "source": "dstotijn/agent-skills/skills/hindsight",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/mise": {
       "source": "dstotijn/agent-skills/skills/mise",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/peer-consult": {
       "source": "dstotijn/agent-skills/skills/peer-consult",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/tmux": {
       "source": "dstotijn/agent-skills/skills/tmux",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/tts": {
       "source": "dstotijn/agent-skills/skills/tts",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "dstotijn/worktree-cleanup": {
       "source": "dstotijn/agent-skills/skills/worktree-cleanup",
-      "branch": "83b9bde9bbac3a7fe5f5cf868bd4f3f8b5da53e5"
+      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
     "googleworkspace/gws-sheets": {
       "source": "googleworkspace/cli/skills/gws-sheets",
