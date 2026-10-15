@@ -27,6 +27,15 @@
         ]
       },
       {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/herdr-agent-context",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "^(startup|resume|clear|compact|fork)$",
         "hooks": [
           {

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Prints a few lines telling a coding agent that it runs inside Herdr, so it
+# does not have to think of checking HERDR_ENV itself. Prints nothing outside
+# Herdr.
+#
+# This is the single source of the text. Claude Code and Codex run it as a
+# SessionStart hook and take its plain stdout as added context; the Pi and OMP
+# extensions run it once at startup and add its output to the system prompt.
+#
+# It reads only environment variables, so it stays fast enough to run on every
+# session start, and it never exits non-zero.
+
+[ "${HERDR_ENV:-}" = 1 ] || exit 0
+
+location=""
+[ -n "${HERDR_WORKSPACE_ID:-}" ] && location+=", workspace \`$HERDR_WORKSPACE_ID\`"
+[ -n "${HERDR_PANE_ID:-}" ] && location+=", pane \`$HERDR_PANE_ID\`"
+
+cat <<EOF
+You are running inside Herdr, a terminal multiplexer for coding agents${location}.
+Other coding agents run in neighbouring panes. \`fleet\` shows them, \`delegate\` hands standalone work to a new agent in its own worktree, and the \`herdr\` skill covers everything else.
+Messages that start with "Delegated by" or that report on delegated work come from another agent, not from the user.
+EOF
