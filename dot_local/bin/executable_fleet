@@ -1,0 +1,343 @@
+#!/usr/bin/env bash
+# Show what every coding agent in Herdr is doing: its state, Git branch and
+# changes, pull request and last line of output. Strictly read-only: it never
+# sends input, keys or prompts to agents and never changes focus.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: fleet [--waiting] [--state STATE[,STATE...]] [--json]
+
+Show every live coding agent in Herdr with its state, Git branch, pull
+request and last line of output. Agents that need you come first.
+
+Options:
+  -w, --waiting    Only agents waiting on you: blocked, done or idle
+  --state LIST     Only agents in these states (comma-separated): blocked,
+                   done, idle, unknown, working
+  --json           Print JSON for scripts and agents
+  -h, --help       Show this help
+
+Text columns:
+  STATE      BLOCKED means the agent is waiting on an approval or question
+  GIT        *N uncommitted paths, ↑N/↓N commits ahead of/behind upstream,
+             "local" when the branch has no upstream, "clean" otherwise
+  PR         Pull request for the branch with CI and review status, looked
+             up with gh for GitHub remotes only
+
+The second line of each agent is the last meaningful line of its output.
+EOF
+}
+
+json=0
+states=""
+while [ $# -gt 0 ]; do
+  case $1 in
+    --json) json=1 ;;
+    -w | --waiting) states=blocked,done,idle ;;
+    --state)
+      [ $# -ge 2 ] || { usage >&2; exit 2; }
+      states=$2
+      shift
+      ;;
+    --state=*) states=${1#--state=} ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+for state in ${states//,/ }; do
+  case $state in
+    blocked | done | idle | unknown | working) ;;
+    *)
+      echo "fleet: unknown state: $state" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if ! herdr status server >/dev/null 2>&1; then
+  echo "fleet: the Herdr server is not running" >&2
+  exit 1
+fi
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/fleet.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+herdr agent list >"$tmp/agents.json"
+herdr workspace list >"$tmp/workspaces.json"
+
+# Live agents with their workspace, filtered by state and sorted so the ones
+# that need attention come first.
+jq -n --slurpfile a "$tmp/agents.json" --slurpfile w "$tmp/workspaces.json" --arg states "$states" '
+  ($w[0].result.workspaces | map({key: .workspace_id, value: .}) | from_entries) as $ws
+  | ($states | split(",") | map(select(. != ""))) as $want
+  | ["blocked", "done", "idle", "unknown", "working"] as $order
+  | [$a[0].result.agents[]
+      | select(($want | length) == 0 or (.agent_status | IN($want[])))
+      | {
+          name,
+          kind: .agent,
+          state: .agent_status,
+          pane_id,
+          tab_id,
+          workspace_id,
+          workspace: $ws[.workspace_id].label,
+          workspace_number: $ws[.workspace_id].number,
+          title: .terminal_title_stripped,
+          cwd: (.foreground_cwd // .cwd)
+        }]
+  | sort_by((.state as $s | $order | index($s) // 99), .workspace_number, .pane_id)
+' >"$tmp/list.json"
+jq '[.[].cwd | select(. != null)] | unique' "$tmp/list.json" >"$tmp/dirs.json"
+
+# Print the Git state of a directory and the pull request for its branch as
+# JSON. --no-optional-locks keeps git status from refreshing the index.
+dir_info() {
+  local dir=$1 top git branch remote url default out note="" pr=null
+  if ! top=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null); then
+    echo '{"git": null, "pr": null, "pr_note": "not a Git repository"}'
+    return
+  fi
+  git=$(git -C "$dir" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null |
+    jq -Rn --arg root "$top" '
+      def field($p): map(select(startswith($p)) | .[($p | length):]) | .[0];
+      def count: ltrimstr("+") | ltrimstr("-") | tonumber;
+      [inputs] as $l
+      | ($l | field("# branch.head ")) as $head
+      | ($l | field("# branch.ab ") | if . then split(" ") else null end) as $ab
+      | {
+          root: $root,
+          branch: (if $head == "(detached)" then null else $head end),
+          commit: ($l | field("# branch.oid ") | .[:7]),
+          upstream: ($l | field("# branch.upstream ")),
+          ahead: (if $ab then $ab[0] | count else null end),
+          behind: (if $ab then $ab[1] | count else null end),
+          changes: ($l | map(select(startswith("#") | not)) | length)
+        }')
+  branch=$(jq -r '.branch // empty' <<<"$git")
+  if [ -z "$branch" ]; then
+    note="detached HEAD"
+  else
+    remote=$(git -C "$dir" config "branch.$branch.remote" 2>/dev/null || echo origin)
+    url=$(git -C "$dir" remote get-url "$remote" 2>/dev/null || true)
+    default=$(git -C "$dir" symbolic-ref --quiet --short "refs/remotes/$remote/HEAD" 2>/dev/null || true)
+    case $url in
+      *github.com[:/]*) ;;
+      *) note="no GitHub remote" ;;
+    esac
+    if [ -z "$note" ] && [ "$branch" = "${default#"$remote"/}" ]; then
+      note="default branch"
+    fi
+  fi
+  if [ -z "$note" ]; then
+    if out=$(cd "$dir" && GH_PROMPT_DISABLED=1 gh pr view \
+      --json number,title,url,state,isDraft,reviewDecision,statusCheckRollup 2>&1); then
+      pr=$(jq '
+        (.statusCheckRollup // []) as $checks
+        | {
+            number,
+            title,
+            url,
+            state: (.state | ascii_downcase),
+            draft: .isDraft,
+            ci: (
+              if ($checks | length) == 0 then null
+              elif any($checks[]; (.conclusion // .state // "")
+                | IN("FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE"))
+              then "fail"
+              elif any($checks[]; (.__typename == "CheckRun" and .status != "COMPLETED")
+                or ((.state // "") | IN("PENDING", "EXPECTED")))
+              then "pending"
+              else "pass" end),
+            review: (.reviewDecision // "" | if . == "" then null else ascii_downcase end)
+          }' <<<"$out")
+    else
+      case $out in
+        *"no pull requests found"*) note="no pull request" ;;
+        *) note="gh: $(head -n 1 <<<"$out")" ;;
+      esac
+    fi
+  fi
+  jq -n --argjson git "$git" --argjson pr "$pr" --arg note "$note" \
+    '{git: $git, pr: $pr, pr_note: (if $note == "" then null else $note end)}'
+}
+
+# Look up every directory and read every agent in parallel. `agent read` with
+# the detection source reads Herdr's screen snapshot without scrolling the pane
+# or marking the agent as seen.
+i=0
+while IFS= read -r dir; do
+  dir_info "$dir" >"$tmp/dir.$i" &
+  i=$((i + 1))
+done < <(jq -r '.[]' "$tmp/dirs.json")
+i=0
+while IFS= read -r pane; do
+  herdr agent read "$pane" --source detection >"$tmp/read.$i" 2>/dev/null &
+  i=$((i + 1))
+done < <(jq -r '.[].pane_id' "$tmp/list.json")
+wait
+
+n=$(jq length "$tmp/list.json")
+m=$(jq length "$tmp/dirs.json")
+for ((j = 0; j < m; j++)); do cat "$tmp/dir.$j"; done | jq -s . >"$tmp/info.json"
+for ((j = 0; j < n; j++)); do jq -Rs . "$tmp/read.$j" 2>/dev/null || echo null; done | jq -s . >"$tmp/reads.json"
+
+# Pick the last meaningful line of an agent screen: drop the input box and the
+# status footer below the prompt, skip spinners, timers, tips and key hints,
+# then join the remaining last line with the wrapped lines of its paragraph.
+# For a blocked agent, start at its question instead, so the line shows what it
+# is asking rather than the options it offers.
+read -r -d '' last_line_jq <<'EOF' || true
+def noise:
+  test("^\\s*$")
+  or test("^[\\s─━═│┃╭╮╰╯┌┐└┘├┤┬┴┼▔▁-]+$")
+  or test("(esc|enter|ctrl\\+\\w+|shift\\+tab) to |for shortcuts|Update (installed|available)| · /\\w+$"; "i")
+  or test("^\\s*\\S\\s+\\S+(…|\\.\\.\\.)\\s*(\\(.*)?$")
+  or test("^\\s*(\\S\\s+)?\\w+ for ([0-9]+[hms]\\s*)+")
+  or test("^\\s*(⎿\\s+)?Tip:");
+def marker: test("^\\s*([⏺•※⎿❯›>*-]|[0-9]+[.)])\\s");
+def last_line($blocked):
+  if . == null then null else
+    (split("\n") | map(sub("\\s+$"; ""))) as $all
+    | ([range(0; $all | length) | select($all[.] | test("^\\s*[❯›](\\s|$)"))] | last) as $prompt
+    | ([range(0; $all | length) | select($all[.] | test("^\\s*[─━]{8,}\\s*$"))]) as $rules
+    | (if $prompt != null then
+        (($rules | map(select(. < $prompt)) | last) as $r
+         | if $r != null and $prompt - $r <= 2 then $r else $prompt end)
+      elif ($rules | length) >= 2 and $rules[-1] - $rules[-2] <= 12 then $rules[-2]
+      else ($all | length) end) as $end
+    | $all[:$end] as $lines
+    | def start($i):
+        [range($i; -1; -1)
+         | select(. as $j | ($lines[$j] | marker) or $j == 0 or ($lines[$j - 1] | test("^\\s*$")))]
+        | first;
+    # A line is kept when neither it nor the first line of its paragraph is
+    # noise, which also drops the wrapped tail of a tip.
+      [range(0; $lines | length) | select(($lines[.] | noise | not) and ($lines[start(.)] | noise | not))] as $kept
+    | if $kept == [] then null else
+        $kept[-1] as $k
+        | (if $blocked then ($kept | map(select($lines[.] | test("\\?"))) | last) else null end) as $q
+        | $lines[start($q // $k):$k + 1]
+        | map(select(noise | not) | sub("^\\s+"; ""))
+        | join(" ")
+        | sub("^[⏺•※⎿]\\s*"; "")
+        | sub("^recap:\\s*"; "")
+        | sub("\\s*\\(disable recaps in /config\\)$"; "")
+        | gsub("\\s+"; " ")
+        | .[:300]
+      end
+  end;
+EOF
+
+jq -n \
+  --slurpfile list "$tmp/list.json" \
+  --slurpfile dirs "$tmp/dirs.json" \
+  --slurpfile info "$tmp/info.json" \
+  --slurpfile reads "$tmp/reads.json" \
+  "$last_line_jq"'
+  ([$dirs[0], $info[0]] | transpose | map({key: .[0], value: .[1]}) | from_entries) as $by_dir
+  | [range(0; $list[0] | length) as $i
+      | $list[0][$i]
+      | del(.workspace_number)
+      | . + ((if .cwd then $by_dir[.cwd] else null end) // {git: null, pr: null, pr_note: null})
+      | (.state == "blocked") as $blocked
+      | .last_line = ($reads[0][$i] | last_line($blocked))]
+' >"$tmp/fleet.json"
+
+if [ "$json" = 1 ]; then
+  jq '{agents: .}' "$tmp/fleet.json"
+  exit 0
+fi
+
+if [ -t 1 ]; then
+  width=$(tput cols 2>/dev/null || echo 120)
+else
+  width=${COLUMNS:-120}
+fi
+color=false
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  color=true
+fi
+
+jq -r --argjson width "$width" --argjson color "$color" --arg home "$HOME" '
+  def trunc($n): if length > $n then .[:([$n - 1, 0] | max)] + "…" else . end;
+  def pad($n): if length < $n then . + (" " * ($n - length)) else . end;
+  def paint($code): if $color then "\u001b[\($code)m\(.)\u001b[0m" else . end;
+  def state_code: {blocked: "1;31", done: "32", working: "36", unknown: "33"}[.] // "0";
+  def git_text:
+    if .git == null then "-"
+    else .git as $g
+      | [ (if $g.changes > 0 then "*\($g.changes)" else empty end),
+          (if $g.upstream == null then "local"
+           else (if $g.ahead > 0 then "↑\($g.ahead)" else empty end),
+                (if $g.behind > 0 then "↓\($g.behind)" else empty end) end) ]
+      | if length == 0 then "clean" else join(" ") end
+    end;
+  def pr_text:
+    if .pr != null then .pr as $p
+      | ["#\($p.number)",
+         (if $p.state != "open" then $p.state else empty end),
+         (if $p.draft then "draft" else empty end),
+         (if $p.ci then "ci:\($p.ci)" else empty end),
+         ({approved: "approved", changes_requested: "changes requested", review_required: "needs review"}[$p.review // ""] // empty)]
+      | join(" ")
+    elif (.pr_note // "") | startswith("gh:") then "gh error"
+    else "-" end;
+  def branch_text:
+    if .git == null then (.cwd // "-" | sub("^\($home)"; "~"))
+    elif .git.branch == null then "(detached \(.git.commit))"
+    else .git.branch end;
+
+  ["blocked", "done", "idle", "unknown", "working"] as $order
+  | . as $agents
+  | ($agents | group_by(.state) | sort_by(.[0].state as $s | $order | index($s) // 99)
+    | map("\(length) \(.[0].state)") | join(", ")) as $counts
+  | ($agents | map({
+      state: (if .state == "blocked" then "BLOCKED" else .state end),
+      code: (.state | state_code),
+      agent: (.name // "-"),
+      kind: (.kind // "-"),
+      pane: .pane_id,
+      workspace: (.workspace // .workspace_id),
+      branch: branch_text,
+      git: git_text,
+      pr: pr_text,
+      last: (.last_line // .title // "")
+    })) as $rows
+  | {state: "STATE", agent: "AGENT", kind: "KIND", pane: "PANE", workspace: "WORKSPACE",
+     branch: "BRANCH", git: "GIT", pr: "PR", code: null} as $head
+  | def w($k; $cap): [$head[$k], $rows[][$k]] | map(length) | max | [., $cap] | min;
+  # Fixed columns first, then split what is left between the workspace, the
+  # branch and the pull request.
+    w("state"; 7) as $ws | w("agent"; 16) as $wa | w("kind"; 8) as $wk
+  | w("pane"; 10) as $wp | w("git"; 12) as $wg
+  | ($width - ($ws + $wa + $wk + $wp + $wg) - 7 * 2) as $rest
+  | ([w("pr"; 40), ([12, ($rest / 2 | floor)] | max)] | min) as $wpr0
+  | ([w("workspace"; 24), ([8, (($rest - $wpr0) * 2 / 5 | floor)] | max)] | min) as $wws
+  | ([w("branch"; 36), ([8, $rest - $wpr0 - $wws] | max)] | min) as $wb
+  | ([$rest - $wws - $wb, 8] | max) as $wpr
+  | def line($r):
+      [($r.state | pad($ws) | if $r.code then paint($r.code) else . end),
+       ($r.agent | trunc($wa) | pad($wa)),
+       ($r.kind | trunc($wk) | pad($wk)),
+       ($r.pane | trunc($wp) | pad($wp)),
+       ($r.workspace | trunc($wws) | pad($wws)),
+       ($r.branch | trunc($wb) | pad($wb)),
+       ($r.git | trunc($wg) | pad($wg)),
+       ($r.pr | trunc($wpr))]
+      | join("  ") | sub("\\s+$"; "");
+    if ($agents | length) == 0 then "No agents." else "\($agents | length) agent\(if ($agents | length) == 1 then "" else "s" end): \($counts)" end,
+    (if ($agents | length) > 0 then
+      "",
+      (line($head) | paint("1")),
+      ($rows[] | line(.), ("  » " + (.last | trunc($width - 4)) | paint("2")))
+    else empty end)
+' "$tmp/fleet.json"
