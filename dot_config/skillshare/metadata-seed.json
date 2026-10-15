@@ -41,6 +41,10 @@
       "source": "dstotijn/agent-skills/skills/go-dev",
       "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
     },
+    "dstotijn/grilling": {
+      "source": "dstotijn/agent-skills/skills/grilling",
+      "branch": "be1567d42d94bcefbe86c0a2f678093581ef2a94"
+    },
     "dstotijn/handoff": {
       "source": "dstotijn/agent-skills/skills/handoff",
       "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
@@ -115,10 +119,6 @@
     },
     "mattpocock/grill-with-docs": {
       "source": "mattpocock/skills/skills/engineering/grill-with-docs",
-      "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
-    },
-    "mattpocock/grilling": {
-      "source": "mattpocock/skills/skills/productivity/grilling",
       "branch": "24fe0ef7737efae15c87225755e9f6f5965e4888"
     },
     "mattpocock/implement": {
