@@ -54,7 +54,7 @@ swap_pane_right = "prefix+alt+l"
 
 [ui]
 status_indicators = "dots"
-sidebar_width = 34
+sidebar_width = 42
 
 [ui.toast]
 delivery = "system"
