@@ -16,16 +16,19 @@ Global instructions for AI coding agents.
 ## Delegating standalone work
 
 - Inside Herdr (`HERDR_ENV=1`), hand standalone work to a fresh agent in its own Herdr workspace. Standalone
-  work is a separate fix, PR, or investigation that needs its own branch. Load the `herdr` skill, then:
-  1. Create or reuse the worktree with `wt`.
-  2. Open it under the workspace of the repository's primary checkout with
-     `herdr worktree open --workspace <id> --path <worktree> --label <label> --no-focus`. Find that workspace
-     with `herdr workspace list`, and create it with `herdr workspace create --cwd <checkout> --no-focus` if
-     it is missing.
-  3. Start the harness you are running in the new workspace's root pane with
-     `herdr agent start <name> --kind <kind> --pane <root pane id>`, then send it the task with
-     `herdr agent prompt`.
-  4. Report the workspace and agent name. Keep focus where it is.
+  work is a separate fix, PR, or investigation that needs its own branch. Run `delegate` from inside the
+  repository; it creates or reuses the worktree with `wt`, opens it under the primary checkout's workspace
+  without taking focus, starts the agent, and sends the brief:
+  `delegate <branch> <brief-file> --label "ABC-123: Short title" --json`.
+  The agent is the same kind as you unless you pass `--kind`. Run `delegate --help` for the other options,
+  and `--dry-run` to preview.
+- Write the brief for an agent that knows nothing of this conversation: the goal, relevant context, and what
+  done looks like. Quote the user's own words for every constraint. Mark anything you inferred yourself as
+  your inference, so the agent can tell it apart from what the user asked for. `delegate` appends how to
+  report back to you, so don't repeat that.
+- If `delegate` reports a blocked agent, such as a trust prompt, show the user its screen and let them
+  decide. Never answer the prompt yourself.
+- Report the workspace and agent name from `delegate`'s output.
 - Do not use the native subagent tool for standalone work. Keep native subagents for short read-only
   lookups that feed the current task.
 - Outside Herdr, use a native subagent or do the work in the current session.

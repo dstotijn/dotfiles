@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# Hand a piece of standalone work to a fresh coding agent in its own Git
+# worktree and Herdr workspace, nested under the primary checkout's workspace.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: delegate [options] <branch> [brief-file] [-- <agent-args>...]
+
+Hand standalone work to a fresh coding agent in its own Git worktree and
+Herdr workspace. Run it from a Herdr pane inside the Git repository.
+
+Arguments:
+  <branch>          Branch for the worktree. An existing branch or worktree
+                    is reused; otherwise the branch is created.
+  [brief-file]      File with the task brief. Omit it or pass - to read stdin.
+  <agent-args>      Native arguments for the agent, passed after --.
+
+Options:
+  -b, --base REF    Base for a new branch (default: the default branch;
+                    @ means the current HEAD)
+  -n, --name NAME   Agent name (default: derived from the branch)
+  -l, --label TEXT  Workspace label (default: the branch name),
+                    for example "ABC-123: Short title"
+  -k, --kind KIND   Agent kind, such as claude or codex (default: the kind
+                    of agent running in the calling pane)
+  -C DIR            Run as if started in DIR
+      --json        Print the result as JSON
+      --dry-run     Show what would happen without changing anything
+  -h, --help        Show this help
+
+delegate appends a short footer to the brief that tells the agent how to
+report back to the calling pane ($HERDR_PANE_ID).
+EOF
+}
+
+die() {
+  printf 'delegate: %s\n' "$1" >&2
+  exit "${2:-1}"
+}
+
+base=""
+name=""
+label=""
+kind=""
+dir="$PWD"
+json=false
+dry_run=false
+branch=""
+brief_file=""
+agent_args=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -b | --base) base="${2:?--base needs a value}"; shift 2 ;;
+    -n | --name) name="${2:?--name needs a value}"; shift 2 ;;
+    -l | --label) label="${2:?--label needs a value}"; shift 2 ;;
+    -k | --kind) kind="${2:?--kind needs a value}"; shift 2 ;;
+    -C) dir="${2:?-C needs a value}"; shift 2 ;;
+    --json) json=true; shift ;;
+    --dry-run) dry_run=true; shift ;;
+    -h | --help) usage; exit 0 ;;
+    --) shift; agent_args=("$@"); break ;;
+    -?*) die "unknown option: $1 (see --help)" 2 ;;
+    *)
+      if [ -z "$branch" ]; then
+        branch="$1"
+      elif [ -z "$brief_file" ]; then
+        brief_file="$1"
+      else
+        die "unexpected argument: $1 (see --help)" 2
+      fi
+      shift
+      ;;
+  esac
+done
+
+[ -n "$branch" ] || { usage >&2; exit 2; }
+[ "${HERDR_ENV:-}" = 1 ] && [ -n "${HERDR_PANE_ID:-}" ] ||
+  die "run delegate from a Herdr pane (HERDR_ENV=1 and HERDR_PANE_ID must be set)"
+for tool in git wt herdr jq; do
+  command -v "$tool" >/dev/null || die "$tool is not installed"
+done
+
+# The caller's own agent, if any, sets the default kind and the footer.
+caller=$(herdr agent get "$HERDR_PANE_ID" 2>/dev/null | jq -c .result.agent || true)
+if [ -z "$kind" ]; then
+  kind=$(jq -r '.agent // empty' <<<"$caller")
+  [ -n "$kind" ] || die "no agent runs in pane $HERDR_PANE_ID to take the kind from; pass --kind"
+fi
+
+# Read the brief first, so later commands cannot consume stdin.
+if [ -z "$brief_file" ] || [ "$brief_file" = - ]; then
+  [ -t 0 ] && die "pass a brief file, or pipe the brief on stdin"
+  brief=$(cat)
+else
+  brief=$(cat -- "$brief_file")
+fi
+[ -n "${brief//[[:space:]]/}" ] || die "the brief is empty"
+
+# Resolve the repository. The first entry of `git worktree list` is the
+# primary checkout, wherever delegate runs from.
+git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 || die "not inside a Git repository: $dir"
+worktrees=$(git -C "$dir" worktree list --porcelain)
+primary=$(sed -n '1s/^worktree //p' <<<"$worktrees")
+grep -qx bare <<<"$(sed '/^$/q' <<<"$worktrees")" && die "bare repositories are not supported"
+git check-ref-format --branch "$branch" >/dev/null 2>&1 || die "invalid branch name: $branch"
+
+worktree=$(awk -v ref="refs/heads/$branch" '
+  /^worktree / { path = substr($0, 10) }
+  $0 == "branch " ref { print path; exit }
+' <<<"$worktrees")
+branch_exists=false
+git -C "$dir" show-ref --verify --quiet "refs/heads/$branch" && branch_exists=true
+if [ -n "$base" ] && $branch_exists; then
+  printf 'delegate: branch %s already exists; ignoring --base %s\n' "$branch" "$base" >&2
+  base=""
+fi
+
+# Herdr agent names must match [a-z][a-z0-9_-]{0,31}.
+if [ -z "$name" ]; then
+  name=$(tr '[:upper:]' '[:lower:]' <<<"$branch" | sed -E 's/[^a-z0-9_-]+/-/g; s/^[^a-z]+//' | cut -c1-32 | sed -E 's/[-_]+$//')
+  [ -n "$name" ] || die "cannot derive an agent name from $branch; pass --name"
+fi
+[[ "$name" =~ ^[a-z][a-z0-9_-]{0,31}$ ]] || die "invalid agent name: $name (must match [a-z][a-z0-9_-]{0,31})"
+herdr agent get "$name" >/dev/null 2>&1 && die "an agent named $name is already running; pass another --name"
+
+# Some agents ask whether to trust a folder on their first start in an
+# untrusted repository, which blocks `herdr agent start`. Claude Code and Codex
+# both resolve a linked worktree to its primary checkout, so a worktree of a
+# trusted checkout needs nothing extra. Trusting a repository is the user's
+# call, so stop before creating anything. For other kinds, a blocked start is
+# reported below.
+primary_trusted() {
+  local real
+  real=$(cd "$primary" && pwd -P)
+  case "$kind" in
+    claude)
+      jq -e --arg a "$primary" --arg b "$real" \
+        '.projects[$a].hasTrustDialogAccepted == true or .projects[$b].hasTrustDialogAccepted == true' \
+        "${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json" >/dev/null 2>&1
+      ;;
+    codex)
+      awk -v a="[projects.\"$primary\"]" -v b="[projects.\"$real\"]" '
+        /^[[:space:]]*\[/ { in_project = ($0 == a || $0 == b) }
+        in_project && /^[[:space:]]*trust_level[[:space:]]*=[[:space:]]*"trusted"/ { found = 1 }
+        END { exit !found }
+      ' "${CODEX_HOME:-$HOME/.codex}/config.toml" 2>/dev/null
+      ;;
+  esac
+}
+primary_trusted ||
+  die "$kind does not trust $primary yet. Start $kind there once and accept its trust prompt, then run delegate again."
+
+# A worktree that is already open in Herdr gets a new tab, but never a second
+# agent next to a live one.
+workspace_id=""
+if [ -n "$worktree" ]; then
+  workspace_id=$(herdr workspace list | jq -r --arg p "$worktree" \
+    'first(.result.workspaces[] | select(.worktree.checkout_path == $p) | .workspace_id) // empty')
+  if [ -n "$workspace_id" ]; then
+    busy=$(herdr pane list --workspace "$workspace_id" | jq -r '[.result.panes[] | select(.agent != null) | .pane_id] | join(", ")')
+    [ -z "$busy" ] || die "worktree $worktree already has an agent in Herdr pane $busy"
+  fi
+fi
+
+coordinator=$(jq -r 'if .name then "\(.agent) agent `\(.name)`" else "\(.agent) agent" end' <<<"$caller")
+if [ -n "$coordinator" ]; then
+  footer="Delegated by the $coordinator in Herdr pane $HERDR_PANE_ID. Report back with \`herdr agent prompt $HERDR_PANE_ID \"<message>\"\` (no --wait): once if you have a question this brief does not settle, and once when you are done. Never use --no-verify. Do not push or open pull requests unless this brief says so."
+else
+  footer="Delegated from Herdr pane $HERDR_PANE_ID. When you are done, summarize your work in your own session. Never use --no-verify. Do not push or open pull requests unless this brief says so."
+fi
+prompt="$brief"$'\n\n---\n'"$footer"
+
+if [ -n "$worktree" ]; then
+  wt_cmd=()
+elif $branch_exists; then
+  wt_cmd=(wt -C "$dir" switch "$branch" --no-cd -y --format json)
+else
+  wt_cmd=(wt -C "$dir" switch --create "$branch" ${base:+--base "$base"} --no-cd -y --format json)
+fi
+label_args=(${label:+--label "$label"})
+
+# Shell-quote a planned command, leaving <placeholders> readable.
+quote() {
+  printf '%q ' "$@" | sed -E 's/\\(<|>)/\1/g; s/ $//'
+}
+
+if $dry_run; then
+  plan=()
+  [ ${#wt_cmd[@]} -eq 0 ] || plan+=("$(quote "${wt_cmd[@]}")")
+  plan+=("$(quote herdr worktree open --cwd "$primary" --path "$primary" --no-focus)")
+  plan+=("$(quote herdr worktree open --cwd "$primary" --path "${worktree:-<new-worktree>}" ${label_args[@]+"${label_args[@]}"} --no-focus)")
+  [ -z "$workspace_id" ] || plan+=("$(quote herdr tab create --workspace "$workspace_id" --cwd "$worktree" --no-focus)")
+  plan+=("$(quote herdr agent start "$name" --kind "$kind" --pane '<pane>' ${agent_args[@]+-- "${agent_args[@]}"})")
+  plan+=("herdr agent prompt $name <prompt> --wait --until working --until blocked --timeout 30000")
+  if $json; then
+    jq -n --arg primary "$primary" --arg branch "$branch" --argjson branch_exists "$branch_exists" \
+      --arg worktree "$worktree" --arg workspace "$workspace_id" --arg name "$name" --arg kind "$kind" \
+      --arg label "$label" --arg prompt "$prompt" '{
+        dry_run: true, primary_checkout: $primary, branch: $branch, branch_exists: $branch_exists,
+        worktree: (if $worktree == "" then null else $worktree end),
+        workspace_id: (if $workspace == "" then null else $workspace end),
+        agent: $name, kind: $kind, label: (if $label == "" then null else $label end),
+        plan: $ARGS.positional, prompt: $prompt
+      }' --args "${plan[@]}"
+  else
+    printf 'Would delegate %s to a %s agent named %s.\n\n' "$branch" "$kind" "$name"
+    printf '  %s\n' "${plan[@]}"
+    printf '\nPrompt:\n\n%s\n' "$prompt"
+  fi
+  exit 0
+fi
+
+# 1. Create or reuse the worktree.
+branch_created=false
+worktree_created=false
+if [ ${#wt_cmd[@]} -gt 0 ]; then
+  result=$("${wt_cmd[@]}" </dev/null 2>/dev/null) || die "wt failed: $(printf '%q ' "${wt_cmd[@]}")"
+  worktree=$(jq -r .path <<<"$result")
+  branch_created=$(jq -r '.created_branch // false' <<<"$result")
+  worktree_created=true
+fi
+
+# 2. Open the primary checkout through Herdr's worktree API, so Herdr records
+# it as the primary of the group, then open the worktree under it. Using --cwd
+# avoids `not_git_worktree` from a primary workspace without a recorded cwd.
+primary_workspace_id=$(herdr worktree open --cwd "$primary" --path "$primary" --no-focus | jq -r .result.workspace.workspace_id)
+opened=$(herdr worktree open --cwd "$primary" --path "$worktree" ${label_args[@]+"${label_args[@]}"} --no-focus)
+workspace_id=$(jq -r .result.workspace.workspace_id <<<"$opened")
+workspace_label=$(jq -r .result.workspace.label <<<"$opened")
+if [ "$(jq -r .result.already_open <<<"$opened")" = true ]; then
+  pane_id=$(herdr tab create --workspace "$workspace_id" --cwd "$worktree" --no-focus | jq -r .result.root_pane.pane_id)
+else
+  pane_id=$(jq -r .result.root_pane.pane_id <<<"$opened")
+fi
+
+report() {
+  local status="$1"
+  if $json; then
+    jq -n --arg status "$status" --arg agent "$name" --arg kind "$kind" --arg branch "$branch" \
+      --argjson branch_created "$branch_created" --arg worktree "$worktree" \
+      --argjson worktree_created "$worktree_created" --arg primary "$primary" \
+      --arg primary_workspace "$primary_workspace_id" --arg workspace "$workspace_id" \
+      --arg label "$workspace_label" --arg pane "$pane_id" --arg coordinator "$HERDR_PANE_ID" '{
+        status: $status, agent: $agent, kind: $kind, branch: $branch, branch_created: $branch_created,
+        worktree: $worktree, worktree_created: $worktree_created, primary_checkout: $primary,
+        primary_workspace_id: $primary_workspace, workspace_id: $workspace, workspace_label: $label,
+        pane_id: $pane, coordinator_pane_id: $coordinator
+      }'
+  else
+    printf 'agent      %s (%s), status %s\n' "$name" "$kind" "$status"
+    printf 'branch     %s%s\n' "$branch" "$($branch_created && echo ' (new)')"
+    printf 'worktree   %s%s\n' "$worktree" "$($worktree_created && echo ' (new)')"
+    printf 'workspace  %s "%s", under %s\n' "$workspace_id" "$workspace_label" "$primary_workspace_id"
+    printf 'pane       %s\n' "$pane_id"
+  fi
+}
+
+# 3. Start the agent. Herdr waits for the pane's shell prompt and for the
+# agent to become ready. A blocked start is reported, never answered.
+if ! err=$(herdr agent start "$name" --kind "$kind" --pane "$pane_id" ${agent_args[@]+-- "${agent_args[@]}"} 2>&1 >/dev/null); then
+  code=$(jq -r '.error.code // empty' <<<"$err" 2>/dev/null || true)
+  if [ "$code" = agent_not_ready ]; then
+    report blocked
+    printf '\ndelegate: %s is blocked at startup; the brief was not sent. Its screen:\n\n' "$name" >&2
+    herdr agent read "$name" --source visible | grep -v '^[[:space:]]*$' | tail -20 >&2 || true
+  else
+    report failed
+    printf 'delegate: herdr agent start failed: %s\n' "$err" >&2
+  fi
+  exit 1
+fi
+
+# 4. Send the brief and confirm the agent picked it up. A stalled prompt was
+# delivered, but Herdr saw no activity: agents without Herdr's state
+# integration (`herdr integration install <kind>`) can stay "idle" while busy.
+if err=$(herdr agent prompt "$name" "$prompt" --wait --until working --until blocked --timeout 30000 2>&1 >/dev/null); then
+  status=$(herdr agent get "$name" | jq -r .result.agent.agent_status)
+elif [ "$(jq -r '.error.code // empty' <<<"$err" 2>/dev/null || true)" = agent_prompt_stalled ]; then
+  status=submitted
+  printf 'delegate: sent the brief, but Herdr saw no activity from %s; check its pane before resending\n' "$name" >&2
+else
+  report unconfirmed
+  printf 'delegate: could not confirm that %s started on the brief; do not resend it blindly: %s\n' "$name" "$err" >&2
+  exit 1
+fi
+report "$status"
+if [ "$status" = blocked ]; then
+  printf '\ndelegate: %s is waiting for input. Its screen:\n\n' "$name" >&2
+  herdr agent read "$name" --source visible | grep -v '^[[:space:]]*$' | tail -20 >&2 || true
+  exit 1
+fi
