@@ -190,7 +190,7 @@ if $dry_run; then
   plan=()
   [ ${#wt_cmd[@]} -eq 0 ] || plan+=("$(quote "${wt_cmd[@]}")")
   plan+=("$(quote herdr worktree open --cwd "$primary" --path "$primary" --no-focus)")
-  plan+=("$(quote herdr worktree open --cwd "$primary" --path "${worktree:-<new-worktree>}" ${label_args[@]+"${label_args[@]}"} --no-focus)")
+  plan+=("$(quote herdr worktree open --workspace '<primary-workspace>' --path "${worktree:-<new-worktree>}" ${label_args[@]+"${label_args[@]}"} --no-focus)")
   [ -z "$workspace_id" ] || plan+=("$(quote herdr tab create --workspace "$workspace_id" --cwd "$worktree" --no-focus)")
   plan+=("$(quote herdr agent start "$name" --kind "$kind" --pane '<pane>' ${agent_args[@]+-- "${agent_args[@]}"})")
   plan+=("herdr agent prompt $name <prompt> --wait --until working --until blocked --timeout 30000")
@@ -225,8 +225,10 @@ fi
 # 2. Open the primary checkout through Herdr's worktree API, so Herdr records
 # it as the primary of the group, then open the worktree under it. Using --cwd
 # avoids `not_git_worktree` from a primary workspace without a recorded cwd.
+# The worktree is opened with --workspace instead: when several workspaces
+# share the primary checkout, --cwd can nest it under a different one.
 primary_workspace_id=$(herdr worktree open --cwd "$primary" --path "$primary" --no-focus | jq -r .result.workspace.workspace_id)
-opened=$(herdr worktree open --cwd "$primary" --path "$worktree" ${label_args[@]+"${label_args[@]}"} --no-focus)
+opened=$(herdr worktree open --workspace "$primary_workspace_id" --path "$worktree" ${label_args[@]+"${label_args[@]}"} --no-focus)
 workspace_id=$(jq -r .result.workspace.workspace_id <<<"$opened")
 workspace_label=$(jq -r .result.workspace.label <<<"$opened")
 if [ "$(jq -r .result.already_open <<<"$opened")" = true ]; then
