@@ -1,0 +1,8 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -eu
+
+duti -s org.chromium.Chromium http
+duti -s org.chromium.Chromium https
+duti -s org.chromium.Chromium public.html all
+{{ end -}}
