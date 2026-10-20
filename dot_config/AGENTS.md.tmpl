@@ -106,6 +106,10 @@ Global instructions for AI coding agents.
 - Treat recalled memory as fallible and possibly stale: the repository, issue tracker, and live system outrank
   it. When you verify that a recalled claim is wrong, fix the record: re-retain the corrected memory under the
   same document ID, or delete the document if it no longer holds.
+- Decide whether to retain at a moment that always happens: before you open a pull request. Sessions rarely have
+  a clear end, so do not wait for one.
+- When work concludes an issue or produces a lesson worth keeping, say in your final message what you retained
+  (`Memory: retained <doc-id> in <bank>`) or `Memory: nothing durable`, so the decision is visibly made.
 
 {{- if stat (joinPath .chezmoi.sourceDir ".AGENTS.local.md") }}
 
