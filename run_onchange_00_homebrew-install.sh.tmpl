@@ -10,7 +10,9 @@ FISH_PATH="$(brew --prefix)/bin/fish"
 if ! grep -qxF "$FISH_PATH" /etc/shells; then
     echo "$FISH_PATH" | sudo tee -a /etc/shells
 fi
-if [ "$SHELL" != "$FISH_PATH" ]; then
+# Check the account's login shell, not $SHELL, which agents and other parent
+# processes may set to something else.
+if [ "$(dscl . -read ~ UserShell | awk '{print $2}')" != "$FISH_PATH" ]; then
     chsh -s "$FISH_PATH"
 fi
 {{ end -}}
