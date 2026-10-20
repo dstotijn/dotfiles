@@ -73,6 +73,9 @@ Global instructions for AI coding agents.
 ## Security
 
 - Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.
+- When you run `op`, set `OP_REASON` to a short reason, for example
+  `OP_REASON="Read the staging DB password to run migrations" op read op://...`. It appears in a Herdr
+  notification next to the 1Password approval prompt.
 
 ## Worklog
 
