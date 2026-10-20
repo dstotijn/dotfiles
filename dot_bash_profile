@@ -1,0 +1,6 @@
+# Coding agents get ~/.local/agent-bin first on PATH from __run_coding_agent.
+# Codex and OMP run commands in login shells, where path_helper moves the
+# system and Homebrew directories in front of it, so move it back.
+case ":$PATH:" in
+  *":$HOME/.local/agent-bin:"*) PATH="$HOME/.local/agent-bin:$PATH" ;;
+esac

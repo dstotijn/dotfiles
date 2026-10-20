@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+# Wraps the 1Password CLI for coding agents. __run_coding_agent puts this
+# directory first on PATH, so only agents reach it; other shells run the
+# real op directly.
+#
+# The 1Password approval prompt names the terminal app, not the agent or why it
+# wants access. So when an agent in Herdr runs an op command that will prompt,
+# this first shows a Herdr notification with the agent's name, the command
+# with anything that may be secret redacted, and the reason the agent gave in
+# OP_REASON. It then runs the real op with the same arguments, stdin and exit
+# code.
+#
+# It notifies once per 1Password session rather than on every call, since
+# only the first call in a session prompts. 'op whoami' cannot tell: with the
+# app integration it reports "not signed in" even in an approved session.
+
+self=$0
+
+# Find the real op: the first one on PATH that is not this script.
+real=""
+IFS=: read -ra path_dirs <<<"$PATH"
+for dir in "${path_dirs[@]}"; do
+  candidate=${dir:-.}/op
+  if [ -f "$candidate" ] && [ -x "$candidate" ] && ! [ "$candidate" -ef "$self" ]; then
+    real=$candidate
+    break
+  fi
+done
+if [ -z "$real" ]; then
+  echo "op: the 1Password CLI is not installed" >&2
+  exit 127
+fi
+
+# Outside Herdr there is nowhere to notify. Service accounts and Connect
+# servers never show a desktop prompt.
+if [ "${HERDR_ENV:-}" != 1 ] || [ -z "${HERDR_PANE_ID:-}" ] ||
+  [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ] || [ -n "${OP_CONNECT_HOST:-}" ]; then
+  exec "$real" "$@"
+fi
+
+# Flags whose values are safe to show. Every other flag that may take a value
+# has it redacted, along with field assignments (name=value).
+value_flags=" --account --categories --category --config --encoding --fields
+  --file-mode --file-name --format --in-file -i --out-file -o --env-file
+  --tags --template --title --url --vault "
+bool_flags=" --all --archive --cache --debug --dry-run --favorite --force -f
+  --generate-password --help -h --include-archive --iso-timestamps --no-color
+  --no-newline -n --otp --raw --reveal --version -v "
+
+# Whether a flag is in one of the lists above.
+listed() {
+  [[ $2 == *[[:space:]]"$1"[[:space:]]* ]]
+}
+
+# Shorten an argument to 80 characters, keep it on one line and quote it if it
+# has spaces.
+clip() {
+  local s=${1//[$'\t\r\n']/ }
+  if [ ${#s} -gt 80 ]; then
+    s="${s:0:79}…"
+  fi
+  case $s in
+    *" "*) s="'$s'" ;;
+  esac
+  printf '%s' "$s"
+}
+
+command_words=()
+summary=(op)
+pending="" # what to do with the next argument: show or redact a flag value
+for ((i = 1; i <= $#; i++)); do
+  arg=${!i}
+  if [ "$pending" = show ]; then
+    summary+=("$(clip "$arg")")
+    pending=""
+    continue
+  elif [ "$pending" = redact ]; then
+    summary+=("[redacted]")
+    pending=""
+    continue
+  fi
+  case $arg in
+    --)
+      # Everything after this is the command op run starts: show only its name.
+      next=$((i + 1))
+      summary+=(-- "$(clip "${!next##*/}")")
+      [ $# -gt $next ] && summary+=("…")
+      break
+      ;;
+    op://*) summary+=("$(clip "$arg")") ;;
+    -*=*)
+      if listed "${arg%%=*}" "$value_flags"; then
+        summary+=("$(clip "$arg")")
+      else
+        summary+=("${arg%%=*}=[redacted]")
+      fi
+      ;;
+    -*)
+      summary+=("$arg")
+      if listed "$arg" "$value_flags"; then
+        pending=show
+      elif ! listed "$arg" "$bool_flags"; then
+        pending=redact
+      fi
+      ;;
+    *=*) summary+=("$(clip "${arg%%=*}")=[redacted]") ;;
+    *)
+      if [ ${#command_words[@]} -lt 2 ]; then
+        command_words+=("$arg")
+      fi
+      if [ "${command_words[0]:-}" = run ] && [ ${#command_words[@]} -eq 2 ]; then
+        # op run without --: this is the command it starts.
+        summary+=("$(clip "${arg##*/}")")
+        [ $# -gt $i ] && summary+=("…")
+        break
+      fi
+      summary+=("$(clip "$arg")")
+      ;;
+  esac
+done
+
+# Commands that never ask for approval.
+case "${command_words[0]:-} ${command_words[1]:-}" in
+  " " | "account list" | "account forget" | "completion "* | "help "* | \
+    "signout "* | "update "* | "whoami "*)
+    exec "$real" "$@"
+    ;;
+esac
+for arg in "$@"; do
+  case $arg in
+    --) break ;;
+    -h | --help | -v | --version) exec "$real" "$@" ;;
+  esac
+done
+
+# 1Password approves a terminal session: its tty, or without one, as for
+# commands Claude Code runs, the shell that runs the command, which leads its
+# own process group. Approval lasts until 10 minutes after the last use, so
+# notify on the first call in a session or after 10 idle minutes.
+state=${TMPDIR:-/tmp}/op-agent-notify
+mkdir -p "$state"
+tty=$(ps -o tty= -p $$ 2>/dev/null | tr -d ' ')
+if [ -n "$tty" ] && [ "$tty" != "??" ]; then
+  key=tty-$tty
+else
+  pgid=$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')
+  key=pgid-$pgid-$(ps -o lstart= -p "$pgid" 2>/dev/null | tr -cd '[:alnum:]')
+fi
+recent=$(find "$state/$key" -mmin -10 2>/dev/null)
+touch "$state/$key"
+find "$state" -type f -mmin +720 -delete 2>/dev/null
+if [ -n "$recent" ]; then
+  exec "$real" "$@"
+fi
+
+agent=$(herdr agent get "$HERDR_PANE_ID" 2>/dev/null | jq -r '.result.agent.name // empty' 2>/dev/null)
+workspace=$(herdr workspace get "${HERDR_WORKSPACE_ID:-}" 2>/dev/null |
+  jq -r '.result.workspace.label // empty' 2>/dev/null)
+reason=${OP_REASON:-}
+reason=${reason//[$'\t\r\n']/ }
+[ ${#reason} -gt 160 ] && reason="${reason:0:159}…"
+
+body="Runs: ${summary[*]}"
+body+=$'\n'"Why: ${reason:-no reason given (OP_REASON unset)}"
+body+=$'\n'"Where: ${workspace:+$workspace, }pane $HERDR_PANE_ID"
+herdr notification show "1Password: ${agent:-${workspace:-$HERDR_PANE_ID}} asks for approval" \
+  --body "$body" --sound none >/dev/null 2>&1
+
+exec "$real" "$@"

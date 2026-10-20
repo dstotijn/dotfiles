@@ -61,6 +61,13 @@ else
   mise activate fish --shims | source
 end
 
+# Coding agents get ~/.local/agent-bin first on PATH from __run_coding_agent.
+# Agents that run commands through fish load this file, and brew shellenv above
+# moves Homebrew in front of it, so move it back.
+if contains "$HOME/.local/agent-bin" $PATH
+  fish_add_path --global --move --path "$HOME/.local/agent-bin"
+end
+
 starship init fish | source
 zoxide init fish | source
 if status is-interactive

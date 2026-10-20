@@ -18,5 +18,9 @@ function __run_coding_agent --description "Run a coding agent with its Git signi
     return 1
   end
 
+  # Agents run the commands in here, such as the op wrapper, instead of the
+  # real ones.
+  set -lx PATH "$HOME/.local/agent-bin" $PATH
+
   command $executable $arguments
 end
