@@ -18,11 +18,5 @@ function __run_coding_agent --description "Run a coding agent with its Git signi
     return 1
   end
 
-  set -l signing_key (command git config --path --get user.signingKey)
-  if not test -r "$signing_key"
-    echo "Agent Git signing key is unavailable: $signing_key" >&2
-    return 1
-  end
-
   command $executable $arguments
 end

@@ -63,4 +63,13 @@ end
 
 starship init fish | source
 zoxide init fish | source
+if status is-interactive
+  if not set -q MCFLY_HISTFILE
+    set -gx MCFLY_HISTFILE "$__fish_user_data_dir/"(set -q fish_history; and echo $fish_history; or echo fish)"_history"
+  end
+  if not test -e "$MCFLY_HISTFILE"
+    mkdir -p (dirname -- "$MCFLY_HISTFILE")
+    touch -- "$MCFLY_HISTFILE"
+  end
+end
 mcfly init fish | source

@@ -15,13 +15,13 @@ Config managment via [chezmoi](https://www.chezmoi.io/).
 2. Install chezmoi and apply:
 
 ```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply dstotijn
+sh -c "$(curl -fsLS get.chezmoi.io/lb)" -- init --apply dstotijn
 ```
 
 ### Linux (Debian-based)
 
 ```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply dstotijn
+sh -c "$(curl -fsLS get.chezmoi.io/lb)" -- init --apply dstotijn
 ```
 
 The Linux install script handles apt packages, tool installers, and setting fish as the default shell.
