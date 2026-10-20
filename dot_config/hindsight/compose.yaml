@@ -52,6 +52,12 @@ services:
       HINDSIGHT_API_LLM_REASONING_EFFORT: low
       HINDSIGHT_API_LLM_TEMPERATURE: none
       HINDSIGHT_API_LLM_MAX_CONCURRENT: "4"
+      # Top of Hindsight's reflect leaderboard (measured on Groq). The OpenRouter
+      # account only allows vetted providers; of those, only Together serves it
+      # with tool calls, which reflect needs. Medium is gpt-oss's default effort.
+      HINDSIGHT_API_REFLECT_LLM_MODEL: openai/gpt-oss-120b
+      HINDSIGHT_API_REFLECT_LLM_REASONING_EFFORT: medium
+      HINDSIGHT_API_REFLECT_LLM_EXTRA_BODY: '{"provider": {"only": ["together"]}}'
 
       # Embedding and reranker calls reuse the LLM key. Changing the embedding
       # model later means re-embedding everything, so leave it be.
