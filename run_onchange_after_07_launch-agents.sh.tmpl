@@ -2,11 +2,18 @@
 #!/bin/sh
 # Reload launchd agents when their definitions change.
 # com.github.dstotijn.alink.plist hash: {{ include "private_Library/LaunchAgents/com.github.dstotijn.alink.plist.tmpl" | sha256sum }}
-# com.github.dstotijn.alink-herdr-agent.plist hash: {{ include "private_Library/LaunchAgents/com.github.dstotijn.alink-herdr-agent.plist.tmpl" | sha256sum }}
+# com.github.dstotijn.inbox-herdr-agent.plist hash: {{ include "private_Library/LaunchAgents/com.github.dstotijn.inbox-herdr-agent.plist.tmpl" | sha256sum }}
 set -eu
 
 domain="gui/$(id -u)"
-for label in com.github.dstotijn.alink com.github.dstotijn.alink-herdr-agent; do
+
+# The inbox agent replaced these. Closing their Herdr workspaces is left to
+# the user.
+for label in com.github.dstotijn.alink-herdr-agent com.github.dstotijn.diary-herdr-agent; do
+  launchctl bootout "$domain/$label" 2>/dev/null || true
+done
+
+for label in com.github.dstotijn.alink com.github.dstotijn.inbox-herdr-agent; do
   launchctl bootout "$domain/$label" 2>/dev/null || true
   # bootout returns before the service is removed; bootstrapping too early
   # fails with "Input/output error".

@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.github.dstotijn.alink-herdr-agent</string>
+  <string>com.github.dstotijn.inbox-herdr-agent</string>
   <key>ProgramArguments</key>
   <array>
-    <string>{{ .chezmoi.homeDir }}/.local/bin/alink-herdr-agent</string>
+    <string>{{ .chezmoi.homeDir }}/.local/bin/inbox-herdr-agent</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
@@ -18,6 +18,6 @@
   <key>StartInterval</key>
   <integer>60</integer>
   <key>StandardErrorPath</key>
-  <string>{{ .chezmoi.homeDir }}/Library/Logs/alink-herdr-agent.log</string>
+  <string>{{ .chezmoi.homeDir }}/Library/Logs/inbox-herdr-agent.log</string>
 </dict>
 </plist>

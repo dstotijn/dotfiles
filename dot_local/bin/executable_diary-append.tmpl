@@ -1,0 +1,31 @@
+{{ if hasKey . "diary" -}}
+#!/bin/sh
+# Append a dictated diary entry to today's diary note. VoiceInk runs this as a
+# custom command and passes the transcript on stdin. The diary agent started
+# by inbox-herdr-agent picks up new entries every five minutes.
+set -eu
+PATH=/usr/bin:/bin
+
+vault={{ .diary.vault | squote }}
+vault="${DIARY_VAULT:-$vault}"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/diary"
+
+text=$(cat)
+[ -n "$(printf '%s' "$text" | tr -d '[:space:]')" ] || exit 0
+
+# One date call, so an entry dictated at midnight can't straddle two days.
+set -- $(date '+%Y-%m %Y-%m-%d %H:%M:%S')
+month=$1 day=$2 time=$3
+
+# Continuation lines are tab-indented so they stay inside the bullet.
+tab=$(printf '\t')
+body=$(printf '%s' "$text" | sed -e '1s/^[[:space:]]*//' -e "2,\$s/^/$tab/")
+
+if ! { mkdir -p "$vault/Diary/$month" 2>/dev/null &&
+  printf -- '- %s %s\n' "$time" "$body" 2>/dev/null >>"$vault/Diary/$month/$day.md"; }; then
+  mkdir -p "$state_dir"
+  printf -- '- %s %s %s\n' "$day" "$time" "$body" >>"$state_dir/unsaved.md"
+  osascript -e 'display notification "Could not write to the vault. Kept in ~/.local/state/diary/unsaved.md" with title "Diary"' >/dev/null 2>&1 || true
+  exit 1
+fi
+{{ end -}}

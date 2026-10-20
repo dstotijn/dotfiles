@@ -5,3 +5,9 @@
 .claude/skills/codex-peer-transport/scripts
 .codex/skills/claude-peer-transport/scripts
 .config/hindsight/banks/engineering.json
+.local/bin/alink-herdr-agent
+.local/bin/alink-claude-nudge
+.local/bin/diary-herdr-agent
+.local/bin/diary-timer
+Library/LaunchAgents/com.github.dstotijn.alink-herdr-agent.plist
+Library/LaunchAgents/com.github.dstotijn.diary-herdr-agent.plist

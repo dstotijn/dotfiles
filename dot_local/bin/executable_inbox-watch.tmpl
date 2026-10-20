@@ -1,0 +1,278 @@
+#!/usr/bin/env bash
+# Watch the inbox agent's sources and queue one prompt into the Claude Code
+# session that started this, naming the sources with new items. The prompt
+# carries only source names and counts, never item text, so alink peers and
+# GitHub users cannot inject instructions through it. The inbox agent started
+# by inbox-herdr-agent runs this in the background.
+#
+# Sources:
+#   alink   unread messages, reported by `alink listen`. alink's read state
+#           is the cursor.
+#   diary   entries after ~/.local/state/inbox/diary-cursor, checked every
+#           five minutes. The agent advances the cursor.
+#   github  review requests for me and reviews on my pull requests, from
+#           notifications updated after ~/.local/state/inbox/github-cursor.
+#           Polled as often as X-Poll-Interval allows, with If-Modified-Since
+#           so unchanged polls are free. The agent advances the cursor after
+#           a run; this script advances it past notifications that need
+#           nothing, so the window it scans stays small.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: inbox-watch [--dry-run] [--once]
+       inbox-watch github
+
+Without a command, watch alink, the diary and GitHub, and queue one prompt
+into the Claude Code session for each burst of new items.
+
+  --dry-run   Print each prompt instead of queueing it
+  --once      Check every source once, print the prompt, and exit.
+              Implies --dry-run and does not touch any cursor
+
+`inbox-watch github` prints the GitHub items after the cursor as JSON:
+{"items": [...], "scanned_until": "<timestamp>"}. Write scanned_until to
+~/.local/state/inbox/github-cursor once the items are handled.
+EOF
+}
+
+self=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/inbox"
+diary_cursor_file="$state_dir/diary-cursor"
+github_cursor_file="$state_dir/github-cursor"
+alink_pending_file="$state_dir/alink-pending"
+{{- if hasKey . "diary" }}
+vault={{ .diary.vault | squote }}
+diary_dir="${DIARY_VAULT:-$vault}/Diary"
+{{- else }}
+diary_dir="${DIARY_VAULT:+$DIARY_VAULT/Diary}"
+{{- end }}
+diary_interval="${INBOX_DIARY_INTERVAL:-300}"
+# Wait this long after the last new item before queueing a prompt, but never
+# longer than the burst limit after the first.
+settle=10
+burst_limit=60
+
+# Print the diary entries after the cursor as ISO timestamps such as
+# 2026-10-15T14:32:05, which compare correctly with the cursor as plain text.
+diary_entries_after() {
+  local cursor="$1" file day
+  [ -n "$diary_dir" ] && [ -d "$diary_dir" ] || return 0
+  find "$diary_dir" -name '20??-??-??.md' 2>/dev/null | sort | while read -r file; do
+    day=$(basename "$file" .md)
+    [[ "$day" < "${cursor:0:10}" ]] && continue
+    { grep -o '^- [0-9][0-9]:[0-9][0-9]:[0-9][0-9]' "$file" || true; } | cut -c3- |
+      awk -v day="$day" -v cursor="$cursor" '{ t = day "T" $0 } t > cursor { print t }'
+  done
+}
+
+github_cursor() {
+  if [ ! -s "$github_cursor_file" ]; then
+    # Start from now rather than replaying the whole notification history.
+    write_cursor "$github_cursor_file" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  fi
+  cat "$github_cursor_file"
+}
+
+write_cursor() {
+  printf '%s\n' "$2" >"$1.tmp"
+  mv "$1.tmp" "$1"
+}
+
+# Print one JSON line per pull request notification updated after the cursor
+# that needs me, then {"scanned_until": ...} with the newest update seen. A
+# notification's reason only says why I follow the thread, so check the pull
+# request itself: I am a requested reviewer and have no pending review yet,
+# or it is my pull request and someone else reviewed it after the cursor.
+# Fails rather than skip a pull request it could not read, so the cursor
+# never moves past one, except one that no longer exists.
+github_scan() {
+  local cursor="$1" me notifications newest
+  me=$(gh api user --jq .login) || return 1
+  notifications=$(gh api --paginate "notifications?all=true&per_page=50&since=$cursor" \
+    --jq '.[] | select(.updated_at > "'"$cursor"'") | {updated_at, reason, type: .subject.type, url: .subject.url}') ||
+    return 1
+  notifications=$(jq -s . <<<"$notifications")
+  newest=$(jq -r --arg cursor "$cursor" 'map(.updated_at) | max // $cursor' <<<"$notifications")
+  jq -c '.[] | select(.type == "PullRequest" and .url != null)' <<<"$notifications" |
+    while read -r n; do
+      url=$(jq -r .url <<<"$n")
+      if ! pr=$(gh api "$url" 2>&1); then
+        [[ "$pr" == *"HTTP 404"* ]] && continue
+        printf 'inbox-watch: %s\n' "$pr" >&2
+        exit 1
+      fi
+      jq -e --arg me "$me" '.user.login == $me or ([.requested_reviewers[].login] | index($me))' \
+        <<<"$pr" >/dev/null || continue
+      reviews=$(gh api --paginate "$url/reviews?per_page=100") || exit 1
+      reviews=$(jq -s 'add // []' <<<"$reviews")
+      jq -c --arg me "$me" --arg cursor "$cursor" --argjson n "$n" --argjson reviews "$reviews" '
+        {
+          repo: .base.repo.full_name, number, title, url: .html_url, state,
+          author: .user.login, notification_updated_at: $n.updated_at, reason: $n.reason
+        } as $item
+        | if .state == "open"
+            and ([.requested_reviewers[].login] | index($me))
+            and ([$reviews[] | select(.user.login == $me and .state == "PENDING")] | length == 0)
+          then $item + {kind: "review_request"}
+          elif .user.login == $me then
+            [$reviews[] | select(.user.login != $me and .submitted_at != null and .submitted_at > $cursor)] as $new
+            | if ($new | length) > 0
+              then $item + {kind: "reviews_on_my_pr", reviews: [$new[] | {id, user: .user.login, state, submitted_at}]}
+              else empty end
+          else empty end
+      ' <<<"$pr"
+    done || return 1
+  jq -cn --arg newest "$newest" '{scanned_until: $newest}'
+}
+
+if [ "${1:-}" = github ]; then
+  mkdir -p "$state_dir"
+  scan=$(github_scan "$(github_cursor)")
+  jq -s '{items: map(select(has("kind"))), scanned_until: (last.scanned_until)}' <<<"$scan"
+  exit 0
+fi
+
+# `alink listen --notify` runs this for each batch of new messages.
+if [ "${1:-}" = alink-batch ]; then
+  mkdir -p "$state_dir"
+  printf '%s\n' "${ALINK_COUNT:-1}" >>"$alink_pending_file"
+  exit 0
+fi
+
+dry_run=false
+once=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) dry_run=true ;;
+    --once) once=true; dry_run=true ;;
+    -h | --help) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+if ! $dry_run; then
+  : "${CLAUDE_CODE_MESSAGING_SOCKET:?not running inside a Claude Code session; use --dry-run}"
+  : "${CLAUDE_CODE_MESSAGING_TOKEN:?not running inside a Claude Code session; use --dry-run}"
+fi
+mkdir -p "$state_dir"
+
+# Queue one prompt naming the given sources, such as "diary (3)".
+queue_prompt() {
+  local list prompt
+  printf -v list '%s, ' "$@"
+  list=${list%, }
+  prompt="Inbox run: $list. Process new items after each source's cursor."
+  if $dry_run; then
+    printf '%s\n' "$prompt"
+    return
+  fi
+  {
+    jq -cn --arg token "$CLAUDE_CODE_MESSAGING_TOKEN" '{type: "auth", token: $token}'
+    jq -cn --arg prompt "$prompt" '{type: "user", message: {role: "user", content: $prompt}}'
+  } | nc -U -w 2 "$CLAUDE_CODE_MESSAGING_SOCKET"
+  printf '%s queued: %s\n' "$(date +%H:%M:%S)" "$list"
+}
+
+if $once; then
+  sources=()
+  n=$(alink inbox --peek --json | jq length)
+  [ "$n" -gt 0 ] && sources+=("alink ($n)")
+  n=$(diary_entries_after "$(cat "$diary_cursor_file" 2>/dev/null || true)" | wc -l | tr -d ' ')
+  [ "$n" -gt 0 ] && sources+=("diary ($n)")
+  if [ -s "$github_cursor_file" ]; then
+    scan=$(github_scan "$(cat "$github_cursor_file")")
+    n=$(jq -s 'map(select(has("kind"))) | length' <<<"$scan")
+    [ "$n" -gt 0 ] && sources+=("github ($n)")
+  else
+    printf 'github: no cursor yet; the watcher starts it at the current time\n' >&2
+  fi
+  if [ ${#sources[@]} -gt 0 ]; then
+    queue_prompt "${sources[@]}"
+  else
+    printf 'Nothing new.\n'
+  fi
+  exit 0
+fi
+
+alink_pid=""
+trap '[ -z "$alink_pid" ] || kill "$alink_pid" 2>/dev/null || true' EXIT
+trap 'exit 143' TERM HUP INT
+
+# Counts of new items per source since the last prompt, and the newest item
+# already announced, so an item is announced once even while its cursor lags.
+alink_new=0 diary_new=0 github_new=0
+diary_announced="" github_announced=""
+first_new=0 last_new=0
+next_diary=0 next_github=0 poll_interval=60 last_modified=""
+
+mark_new() {
+  [ "$first_new" -gt 0 ] || first_new=$now
+  last_new=$now
+}
+
+while true; do
+  now=$(date +%s)
+
+  if [ -z "$alink_pid" ] || ! kill -0 "$alink_pid" 2>/dev/null; then
+    alink listen --notify "$(printf '%q' "$self") alink-batch" >/dev/null &
+    alink_pid=$!
+  fi
+  if [ -s "$alink_pending_file" ]; then
+    mv "$alink_pending_file" "$alink_pending_file.taken"
+    alink_new=$((alink_new + $(awk '{ n += $1 } END { print n + 0 }' "$alink_pending_file.taken")))
+    rm -f "$alink_pending_file.taken"
+    mark_new
+  fi
+
+  if [ "$now" -ge "$next_diary" ]; then
+    next_diary=$((now + diary_interval))
+    entries=$(diary_entries_after "$(cat "$diary_cursor_file" 2>/dev/null || true)")
+    latest=$(tail -1 <<<"$entries")
+    if [ -n "$latest" ] && [[ "$latest" > "$diary_announced" ]]; then
+      diary_new=$(grep -c . <<<"$entries")
+      diary_announced=$latest
+      mark_new
+    fi
+  fi
+
+  if [ "$now" -ge "$next_github" ]; then
+    next_github=$((now + poll_interval))
+    headers=$(gh api -i ${last_modified:+-H "If-Modified-Since: $last_modified"} 'notifications?all=true&per_page=1' 2>/dev/null |
+      sed -n '1,/^\r*$/p' | tr -d '\r' || true)
+    interval=$(awk -F': ' 'tolower($1) == "x-poll-interval" { print $2 }' <<<"$headers")
+    [ -n "$interval" ] && poll_interval=$interval
+    if [[ "$headers" == HTTP*" 200"* ]]; then
+      cursor=$(github_cursor)
+      if scan=$(github_scan "$cursor"); then
+        items=$(grep -v '"scanned_until"' <<<"$scan" || true)
+        if [ -z "$items" ]; then
+          # Nothing after the cursor needs me. Move the cursor past it, unless
+          # the agent moved it meanwhile.
+          [ "$(cat "$github_cursor_file")" = "$cursor" ] &&
+            write_cursor "$github_cursor_file" "$(tail -1 <<<"$scan" | jq -r .scanned_until)"
+        else
+          latest=$(jq -rs 'map(.notification_updated_at) | max' <<<"$items")
+          if [[ "$latest" > "$github_announced" ]]; then
+            github_new=$(grep -c . <<<"$items")
+            github_announced=$latest
+            mark_new
+          fi
+        fi
+        last_modified=$(awk -F': ' 'tolower($1) == "last-modified" { print $2 }' <<<"$headers")
+      fi
+    fi
+  fi
+
+  if [ "$first_new" -gt 0 ] && { [ $((now - last_new)) -ge "$settle" ] || [ $((now - first_new)) -ge "$burst_limit" ]; }; then
+    sources=()
+    [ "$alink_new" -gt 0 ] && sources+=("alink ($alink_new)")
+    [ "$diary_new" -gt 0 ] && sources+=("diary ($diary_new)")
+    [ "$github_new" -gt 0 ] && sources+=("github ($github_new)")
+    queue_prompt "${sources[@]}"
+    alink_new=0 diary_new=0 github_new=0 first_new=0
+  fi
+
+  sleep 5
+done
