@@ -88,9 +88,12 @@ Global instructions for AI coding agents.
 - Cross-session memory goes through the local Hindsight server and the `hindsight` skill. Do not start it,
   Docker, or any other service just to make an optional memory call. Continue without memory and say once that
   it was unavailable; treat it as blocking only if memory was the explicit ask.
-- The `global` bank holds what helps in any repository: preferences, tools and environment, and cross-project
-  lessons. A repository with its own bank names it in its local Git config: `git config --get hindsight.bank`.
-  Use only these banks; retaining into a bank that does not exist silently creates it.
+- The `global` bank holds what helps in any repository: confirmed behavior of tools and the environment, their
+  bugs, workarounds, and version-specific gotchas, and cross-project lessons. A repository with its own bank
+  names it in its local Git config: `git config --get hindsight.bank`. Use only these banks; retaining into a
+  bank that does not exist silently creates it.
+- Preferences and conventions belong in these agent instructions, not in memory. When you learn one, propose a
+  change to the instructions instead of retaining it.
 - Before retaining, ask whether the memory would help in another repository. If so, retain it to `global`;
   otherwise to the repository's bank. Keep project names and details out of `global`.
 - Banks are declared as bank template manifests. `global`'s is in these dotfiles and deploys to

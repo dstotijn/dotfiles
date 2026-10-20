@@ -1,8 +1,8 @@
 {
   "version": "1",
   "bank": {
-    "retain_mission": "Durable knowledge that holds across repositories: the user's working preferences and conventions, how their tools and environment behave (shell, editor, version and package managers, terminal multiplexer, containers, coding agents), and engineering lessons that would help in any codebase. Keep tool names, commands, versions, and other exact identifiers from the source in the extracted facts.",
-    "reflect_mission": "I am the long-term memory of one developer's coding agents. I know their preferences, their tools and environment, and the lessons they have learned across projects, so an agent can work the way they would and avoid repeating past mistakes.",
+    "retain_mission": "Durable knowledge that holds across repositories: confirmed behavior of the developer's tools and environment (shell, editor, version and package managers, terminal multiplexer, containers, coding agents), their bugs, workarounds, and version-specific gotchas, and engineering lessons that would help in any codebase. Standing preferences and conventions live in the agent instructions, not here. Keep tool names, commands, versions, and other exact identifiers from the source in the extracted facts.",
+    "reflect_mission": "I am the long-term memory of one developer's coding agents. I know how their tools and environment actually behave, which workarounds have been confirmed, and the lessons learned across projects, so an agent avoids repeating past mistakes.",
     "enable_observations": true,
     "default_observation_scopes": "shared",
     "memory_defense": {
