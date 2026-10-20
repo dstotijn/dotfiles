@@ -51,7 +51,7 @@
     },
     "dstotijn/hindsight": {
       "source": "dstotijn/agent-skills/skills/hindsight",
-      "branch": "11929d873a30d065c4986823d49e54f0cbea0676"
+      "branch": "4c763f1afc912f0ecdc83b5d0d0daf291d39d1f0"
     },
     "dstotijn/mise": {
       "source": "dstotijn/agent-skills/skills/mise",
