@@ -83,6 +83,27 @@ Global instructions for AI coding agents.
 - Create or update it only when the user asks, or when uncaptured state must survive into another session.
   Do not duplicate Git history, issue trackers, Hindsight, or routine task summaries.
 
+## Memory (Hindsight)
+
+- Cross-session memory goes through the local Hindsight server and the `hindsight` skill. Do not start it,
+  Docker, or any other service just to make an optional memory call. Continue without memory and say once that
+  it was unavailable; treat it as blocking only if memory was the explicit ask.
+- The `global` bank holds what helps in any repository: preferences, tools and environment, and cross-project
+  lessons. A repository with its own bank names it in its local Git config: `git config --get hindsight.bank`.
+  Use only these banks; retaining into a bank that does not exist silently creates it.
+- Before retaining, ask whether the memory would help in another repository. If so, retain it to `global`;
+  otherwise to the repository's bank. Keep project names and details out of `global`.
+- Banks are declared as bank template manifests. `global`'s is in these dotfiles and deploys to
+  `~/.config/hindsight/banks/global.json`; project manifests live outside the shared dotfiles. Change a bank by
+  editing its manifest and re-importing it with `hindsight bank import-template <bank> <manifest>`, validated
+  with `--dry-run` first, not with ad hoc `bank set-config`, `bank mission`, or `directive` commands. Deleting a
+  directive from a manifest leaves it on the bank, so set `is_active: false` instead.
+- Directives only steer `reflect`. Rules about what to store belong in these instructions and the skill, and
+  each bank's `memory_defense` policy redacts secrets when a memory is stored.
+- Treat recalled memory as fallible and possibly stale: the repository, issue tracker, and live system outrank
+  it. When you verify that a recalled claim is wrong, fix the record: re-retain the corrected memory under the
+  same document ID, or delete the document if it no longer holds.
+
 {{- if stat (joinPath .chezmoi.sourceDir ".AGENTS.local.md") }}
 
 {{ include ".AGENTS.local.md" | trim }}

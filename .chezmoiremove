@@ -4,3 +4,4 @@
 .config/git/agent-ssh-sign
 .claude/skills/codex-peer-transport/scripts
 .codex/skills/claude-peer-transport/scripts
+.config/hindsight/banks/engineering.json

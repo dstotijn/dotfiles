@@ -63,7 +63,7 @@ chezmoi cd                 # Open shell in source directory
 | Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 | AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
 | Agent commands | `dot_local/agent-bin/`, `dot_zprofile`, `dot_bash_profile` | Commands only coding agents run, first on their `PATH`; `op` shows a Herdr notification naming the agent and its reason before a 1Password prompt |
-| Hindsight | `dot_config/hindsight/`, `dot_local/bin/executable_hindsight-up` | Agent memory server in Docker (slim API plus pgvector), with OpenRouter for every model call; `hindsight-up` reads the key from 1Password and starts it. The CLI comes from mise |
+| Hindsight | `dot_config/hindsight/`, `dot_local/bin/executable_hindsight-up` | Agent memory server in Docker (slim API plus pgvector), with OpenRouter for every model call; `hindsight-up` reads the key from 1Password and starts it. Only the `global` bank's manifest lives here; a repository opts into its own bank with `git config hindsight.bank <bank>`, which the SessionStart hook reads. The CLI comes from mise |
 | OMP extensions | `dot_omp/private_agent/private_extensions/wtx.ts` | `/wtx` coordinates Worktrunk checkouts, Herdr workspaces, OMP relocation, and reverse cleanup |
 
 ## AI Agent Instructions
