@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Start (or update) the local Hindsight memory server in Docker.
+#
+# The OpenRouter key is read from 1Password and handed to `docker compose` in
+# the environment only, so it never lands in a file. Docker keeps it in the
+# container's config, which is what lets the restart policy bring Hindsight
+# back after Docker Desktop restarts without asking 1Password again.
+#
+# Extra arguments go to `docker compose` before `up`, for example
+# `hindsight-up --profile ui` to also start the web UI.
+set -euo pipefail
+
+compose_file="$HOME/.config/hindsight/compose.yaml"
+key_ref="${HINDSIGHT_OPENROUTER_KEY_REF:-op://Private/np36slf2qs7tf2lpauwp4m5uha/credential}"
+
+HINDSIGHT_API_LLM_API_KEY=$(op read "$key_ref")
+export HINDSIGHT_API_LLM_API_KEY
+
+docker compose -f "$compose_file" "$@" up -d --wait

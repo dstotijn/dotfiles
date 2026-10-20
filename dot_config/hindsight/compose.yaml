@@ -1,0 +1,85 @@
+# Hindsight memory server for coding agents: the slim API image plus a pgvector
+# Postgres. No local inference: the LLM, embeddings and reranker all go to
+# OpenRouter.
+#
+# Start it with `hindsight-up`, which reads the OpenRouter key from 1Password.
+# The restart policy brings it back whenever Docker Desktop starts.
+#
+# API: http://127.0.0.1:8888 (the hindsight CLI's default URL)
+# Web UI, off by default: hindsight-up --profile ui, then http://127.0.0.1:9999
+
+name: hindsight
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hindsight
+      # Only reachable on the compose network, never published to the host.
+      POSTGRES_PASSWORD: hindsight
+      POSTGRES_DB: hindsight
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=30"]
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "hindsight", "-d", "hindsight"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    stop_grace_period: 30s
+
+  api:
+    image: ghcr.io/vectorize-io/hindsight-api:1.0.0-slim
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8888:8888"
+    environment:
+      HINDSIGHT_API_DATABASE_URL: postgresql://hindsight:hindsight@db:5432/hindsight
+      HINDSIGHT_API_DB_POOL_MIN_SIZE: "1"
+      HINDSIGHT_API_DB_POOL_MAX_SIZE: "10"
+      # A stable ID lets the worker reclaim tasks it held before a restart.
+      HINDSIGHT_API_WORKER_ID: hindsight-local
+
+      HINDSIGHT_API_LLM_PROVIDER: openrouter
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:?run hindsight-up, which reads the OpenRouter key from 1Password}
+      # Top of Hindsight's retain leaderboard at low reasoning. It rejects an
+      # explicit temperature, and OpenRouter then finds no endpoint at all.
+      HINDSIGHT_API_LLM_MODEL: openai/gpt-5.6-luna
+      HINDSIGHT_API_LLM_REASONING_EFFORT: low
+      HINDSIGHT_API_LLM_TEMPERATURE: none
+      HINDSIGHT_API_LLM_MAX_CONCURRENT: "4"
+
+      # Embedding and reranker calls reuse the LLM key. Changing the embedding
+      # model later means re-embedding everything, so leave it be.
+      HINDSIGHT_API_EMBEDDINGS_PROVIDER: openrouter
+      HINDSIGHT_API_EMBEDDINGS_OPENROUTER_MODEL: openai/text-embedding-3-small
+      HINDSIGHT_API_RERANKER_PROVIDER: openrouter
+      HINDSIGHT_API_RERANKER_OPENROUTER_MODEL: cohere/rerank-v3.5
+      # If OpenRouter's reranker fails, return results in fusion order rather
+      # than failing the recall.
+      HINDSIGHT_API_RERANKER_1_PROVIDER: rrf
+    healthcheck:
+      # The image has no curl or wget.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8888/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    stop_grace_period: 30s
+
+  ui:
+    image: ghcr.io/vectorize-io/hindsight-control-plane:1.0.0
+    profiles: [ui]
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "127.0.0.1:9999:9999"
+    environment:
+      HINDSIGHT_CP_DATAPLANE_API_URL: http://api:8888
+
+volumes:
+  db-data:
