@@ -85,6 +85,15 @@ staged = "[+](green)"
 deleted = "[✘](yellow)"
 renamed = "[»](blue)"
 
+# Links the issue named in the Git branch; see ~/.local/bin/branch-issue-link.
+[custom.issue]
+command = "branch-issue-link"
+when = true
+require_repo = true
+shell = ["sh"]
+style = "bold blue"
+format = "([$output]($style) )"
+
 [palettes.catppuccin_mocha]
 red = "#f38ba8"
 maroon = "#eba0ac"

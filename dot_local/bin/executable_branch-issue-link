@@ -1,0 +1,33 @@
+#!/bin/sh
+# Prints the issue ID named in the current Git branch as a clickable OSC 8
+# terminal hyperlink, for the shell prompt and the coding agents' status lines.
+# Prints nothing when the branch names no known issue.
+#
+# Each line of ~/.config/branch-issue-link/trackers maps an issue key to a URL
+# template, in which {id} stands for the issue ID:
+#
+#   ABC https://tracker.example.com/issue/{id}
+#
+# With that line, a branch named `abc-123-fix-login` or
+# `feature/abc-123-fix-login` links ABC-123. The ID comes from the branch name
+# alone, without network calls, so this stays fast enough to run on every
+# prompt.
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/branch-issue-link/trackers"
+[ -r "$config" ] || exit 0
+
+branch=$(git symbolic-ref --short -q HEAD 2>/dev/null) || exit 0
+
+# The hyperlink ends in BEL rather than ESC \ so it holds no backslash that a
+# prompt could escape.
+exec awk -v branch="$branch" '
+  NF < 2 || $1 ~ /^#/ { next }
+  match(tolower(branch), "(^|/)" tolower($1) "-[0-9]+") {
+    id = toupper(substr(branch, RSTART, RLENGTH))
+    sub(/^\//, "", id)
+    url = $2
+    gsub(/[{]id[}]/, id, url)
+    printf "\033]8;;%s\007%s\033]8;;\007", url, id
+    exit
+  }
+' "$config"
