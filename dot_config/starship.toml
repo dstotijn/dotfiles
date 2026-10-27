@@ -92,7 +92,7 @@ when = true
 require_repo = true
 shell = ["sh"]
 style = "bold blue"
-format = "([$output]($style) )"
+format = "([ $output]($style) )"
 
 [palettes.catppuccin_mocha]
 red = "#f38ba8"
