@@ -1,0 +1,10 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+# Write the versioned VoiceInk preferences when they change. voiceink-prefs
+# quits and relaunches VoiceInk when it is running and something differs.
+set -eu
+
+"$HOME/.local/bin/voiceink-prefs" import <<'VOICEINK_PREFERENCES'
+{{ includeTemplate "voiceink/preferences.json" . -}}
+VOICEINK_PREFERENCES
+{{ end -}}

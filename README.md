@@ -65,6 +65,7 @@ chezmoi cd                 # Open shell in source directory
 | Agent commands | `dot_local/agent-bin/`, `dot_zprofile`, `dot_bash_profile` | Commands only coding agents run, first on their `PATH`; `op` shows a Herdr notification naming the agent and its reason before a 1Password prompt |
 | Hindsight | `dot_config/hindsight/`, `dot_local/bin/executable_hindsight-up` | Agent memory server in Docker (slim API plus pgvector), with OpenRouter for every model call; `hindsight-up` reads the key from 1Password and starts it. Only the `global` bank's manifest lives here; a repository opts into its own bank with `git config hindsight.bank <bank>`, which the SessionStart hook reads. The CLI comes from mise |
 | OMP extensions | `dot_omp/private_agent/private_extensions/wtx.ts` | `/wtx` coordinates Worktrunk checkouts, Herdr workspaces, OMP relocation, and reverse cleanup |
+| VoiceInk | `.chezmoitemplates/voiceink/preferences.json`, `dot_local/bin/executable_voiceink-prefs` | Dictation modes, keyboard shortcuts and a few settings, written to VoiceInk's preferences on apply |
 
 ## AI Agent Instructions
 
@@ -132,9 +133,58 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 5. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skill targets
 6. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
 7. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
+8. `run_onchange_after_09_voiceink-prefs.sh.tmpl`: (macOS) Writes the versioned VoiceInk preferences when they change
 
 The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
 checks for a missing launcher on every `chezmoi apply`.
+
+## VoiceInk
+
+VoiceInk keeps its settings in UserDefaults (`com.prakashjoshipax.VoiceInk`).
+`.chezmoitemplates/voiceink/preferences.json` holds the ones worth versioning,
+keyed by preference name:
+
+- `modeConfigurationsV2`: the modes, Dictation and Diary. The Diary mode runs
+  `diary-append`, whose path is templated from the home directory.
+- `Shortcut_*`: the keyboard shortcuts, including the flag that keeps a mode's
+  shortcut cleared.
+- Auto-learn dictionary, paste method and start and stop sounds.
+
+VoiceInk stores modes and shortcuts as data holding JSON. The file shows them as
+sorted, pretty-printed JSON, and `voiceink-prefs` writes any object or array back
+as data. It writes strings, booleans and numbers as their own types.
+
+On apply, `run_onchange_after_09_voiceink-prefs.sh.tmpl` passes the rendered file
+to `voiceink-prefs import`. It does nothing when the live values already match.
+Otherwise it backs up the preferences to `~/.local/state/voiceink/`, quits VoiceInk
+if it is running, writes the values with `defaults write` and relaunches it.
+VoiceInk keeps its settings in memory and saves them back, so writing while it
+runs would be lost. Apply only adds and overwrites keys: removing one from the
+file leaves the live value in place.
+
+Left out on purpose:
+
+- `TranscriptionPrompt`: VoiceInk rebuilds it from the dictionary on launch.
+- `activeConfigurationId`: the mode last used, which changes as modes are used.
+- `audioInputMode` and the selected microphone: tied to this machine's devices.
+- The license and activation keys, Sparkle update keys, onboarding and migration
+  flags, the window frame and the OpenRouter model cache.
+- `~/Library/Application Support/com.prakashjoshipax.VoiceInk`: transcription
+  history, the dictionary, recordings and models.
+
+The preferences hold no API keys.
+
+To capture changes made in VoiceInk's settings, export them into the `main`
+worktree and review the diff:
+
+```fish
+voiceink-prefs export ~/.local/share/chezmoi/.worktrees/main
+```
+
+Export rewrites the keys already in the file and adds every live `Shortcut_*`
+key, so shortcuts for new modes come along. To version another setting, add its
+key to the file with any value and export again. Without an argument, export
+writes to `chezmoi source-path`.
 
 ## Skillshare Pins
 

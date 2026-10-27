@@ -1,0 +1,159 @@
+#!/bin/sh
+# Copy VoiceInk preferences between its UserDefaults and the dotfiles.
+#
+# The dotfiles keep them in .chezmoitemplates/voiceink/preferences.json, one
+# JSON object keyed by preference name. A string, boolean or number is written
+# as that type. An object or array is written as data holding compact JSON,
+# which is how VoiceInk stores its modes and keyboard shortcuts.
+set -eu
+
+bundle_id=com.prakashjoshipax.VoiceInk
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/voiceink"
+prefs_path=.chezmoitemplates/voiceink/preferences.json
+home_template='{{ .chezmoi.homeDir }}'
+
+usage() {
+  cat <<'EOF'
+Usage: voiceink-prefs export [source-dir]
+       voiceink-prefs import [file]
+
+export  Rewrite the preferences file in the chezmoi source directory
+        (default: chezmoi source-path) from VoiceInk's live preferences.
+        It exports the keys already in the file plus every keyboard
+        shortcut, and replaces the home directory with a template so the
+        file works for any user.
+import  Write the preferences in a rendered file (default: stdin) to
+        VoiceInk. Nothing happens if they already match. Otherwise a running
+        VoiceInk is quit first, because it overwrites its preferences while
+        running, and relaunched afterwards. The previous preferences are
+        backed up to ~/.local/state/voiceink.
+
+chezmoi apply runs import whenever the preferences file changes.
+EOF
+}
+
+die() {
+  printf 'voiceink-prefs: %s\n' "$1" >&2
+  exit 1
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+# Save a snapshot of VoiceInk's live preferences for read_live.
+snapshot() {
+  defaults export "$bundle_id" "$tmp/live.plist"
+}
+
+# Print the snapshot's values of the given keys as one JSON object. Data
+# values are decoded from JSON. Keys VoiceInk has not stored are left out.
+read_live() {
+  : >"$tmp/entries"
+  for key; do
+    type=$(plutil -type "$key" "$tmp/live.plist" 2>/dev/null) || continue
+    plutil -extract "$key" raw -n -o - "$tmp/live.plist" >"$tmp/value"
+    case $type in
+      data) base64 -d <"$tmp/value" | jq -c --arg k "$key" '{($k): .}' >>"$tmp/entries" ||
+        die "$key is not JSON data" ;;
+      string) jq -Rsc --arg k "$key" '{($k): .}' <"$tmp/value" >>"$tmp/entries" ;;
+      bool | integer | float) jq -c --arg k "$key" '{($k): .}' <"$tmp/value" >>"$tmp/entries" ;;
+      *) die "$key has unsupported type $type" ;;
+    esac
+  done
+  jq -s 'add // {}' "$tmp/entries"
+}
+
+is_running() {
+  [ -n "$(lsappinfo find bundleID="$bundle_id")" ]
+}
+
+quit_voiceink() {
+  osascript -l JavaScript -e "ObjC.import('AppKit');
+    \$.NSRunningApplication.runningApplicationsWithBundleIdentifier('$bundle_id').js
+      .forEach(app => app.terminate)" >/dev/null
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+    is_running || return 0
+    sleep 0.5
+  done
+  die "VoiceInk did not quit; quit it and run chezmoi apply again"
+}
+
+export_prefs() {
+  source_dir=${1:-$(chezmoi source-path)}
+  file="$source_dir/$prefs_path"
+  [ -f "$file" ] || die "$file does not exist"
+
+  snapshot
+  {
+    jq -r 'keys[]' "$file"
+    # Mode shortcuts are named after mode IDs, so new ones appear as modes are
+    # added. The Legacy keys are migration flags.
+    plutil -p "$tmp/live.plist" |
+      sed -n 's/^  "\(Shortcut_[^"]*\)" => .*/\1/p' |
+      grep -v '^Shortcut_Legacy'
+  } | sort -u >"$tmp/keys"
+
+  # shellcheck disable=SC2046 # Keys contain no whitespace.
+  read_live $(cat "$tmp/keys") >"$tmp/live.json"
+  if jq -e '[.. | strings | select(contains("{{") or contains("}}"))] | any' \
+    "$tmp/live.json" >/dev/null; then
+    die "a value contains {{ or }}, which chezmoi would read as a template"
+  fi
+  jq -S --indent 2 --arg home "$HOME/" --arg tpl "$home_template/" \
+    'walk(if type == "string" then split($home) | join($tpl) else . end)' \
+    "$tmp/live.json" >"$tmp/prefs.json"
+  cat "$tmp/prefs.json" >"$file"
+  printf 'Wrote %s\n' "$file"
+}
+
+import_prefs() {
+  jq -S . "${1:--}" >"$tmp/desired.json" || die "invalid JSON"
+  snapshot
+  # shellcheck disable=SC2046 # Keys contain no whitespace.
+  read_live $(jq -r 'keys[]' "$tmp/desired.json") >"$tmp/live.json"
+  if [ "$(jq -S . "$tmp/live.json")" = "$(cat "$tmp/desired.json")" ]; then
+    echo "VoiceInk preferences are up to date"
+    return
+  fi
+
+  mkdir -p "$state_dir"
+  backup="$state_dir/backup-$(date +%Y%m%dT%H%M%S).plist"
+  (umask 077 && defaults export "$bundle_id" "$backup")
+
+  was_running=false
+  if is_running; then
+    echo "Quitting VoiceInk to update its preferences"
+    quit_voiceink
+    was_running=true
+  fi
+
+  jq -r 'keys[]' "$tmp/desired.json" | while IFS= read -r key; do
+    jq -c --arg k "$key" '.[$k]' "$tmp/desired.json" >"$tmp/value"
+    case $(jq -r type "$tmp/value") in
+      object | array)
+        defaults write "$bundle_id" "$key" -data "$(tr -d '\n' <"$tmp/value" | xxd -p | tr -d '\n')" ;;
+      string) defaults write "$bundle_id" "$key" -string "$(jq -r . "$tmp/value")" ;;
+      boolean) defaults write "$bundle_id" "$key" -bool "$(cat "$tmp/value")" ;;
+      number)
+        if jq -e '. == floor' "$tmp/value" >/dev/null; then
+          defaults write "$bundle_id" "$key" -int "$(cat "$tmp/value")"
+        else
+          defaults write "$bundle_id" "$key" -float "$(cat "$tmp/value")"
+        fi ;;
+      *) die "$key has an unsupported value" ;;
+    esac
+  done
+  printf 'Updated VoiceInk preferences; the previous ones are in %s\n' "$backup"
+
+  if [ "$was_running" = true ]; then
+    open -g -b "$bundle_id"
+    echo "Relaunched VoiceInk"
+  fi
+}
+
+case ${1:-} in
+  export) shift && export_prefs "$@" ;;
+  import) shift && import_prefs "$@" ;;
+  -h | --help) usage ;;
+  *) usage >&2 && exit 2 ;;
+esac

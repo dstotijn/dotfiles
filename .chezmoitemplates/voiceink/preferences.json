@@ -1,0 +1,68 @@
+{
+  "AutoLearnDictionaryModel": "openai/gpt-oss-120b",
+  "AutoLearnDictionaryProvider": "OpenRouter",
+  "IsAutoLearnDictionaryEnabled": true,
+  "Shortcut_mode_10000000-0000-0000-0000-000000000001_cleared": true,
+  "Shortcut_mode_5657DA4B-6E3A-4F9E-A548-BB5BA52CBC87": {
+    "keyCode": 10,
+    "kind": "key",
+    "modifierFlagsRawValue": 1966080
+  },
+  "Shortcut_primaryRecording": {
+    "keyCode": 10,
+    "kind": "key",
+    "modifierFlagsRawValue": 524288
+  },
+  "modeConfigurationsV2": [
+    {
+      "customCommand": {
+        "command": "printf \"%s\" \"$VOICEINK_TRANSCRIPT\" | pbcopy\nosascript <<'APPLESCRIPT'\ntell application \"System Events\"\n    keystroke \"v\" using command down\n    delay 1\n    key code 36\nend tell\nAPPLESCRIPT"
+      },
+      "icon": {
+        "kind": "symbol",
+        "value": "mic.fill"
+      },
+      "id": "10000000-0000-0000-0000-000000000001",
+      "isAIEnhancementEnabled": false,
+      "isDefault": true,
+      "isEnabled": true,
+      "isRealtimeTranscriptionEnabled": true,
+      "isTextFormattingEnabled": true,
+      "name": "Dictation",
+      "outputMode": "customCommand",
+      "selectedLanguage": "auto",
+      "selectedTranscriptionModelName": "parakeet-tdt-0.6b-v3",
+      "useClipboardContext": false,
+      "useScreenCapture": false,
+      "useSelectedTextContext": false
+    },
+    {
+      "customCommand": {
+        "command": "{{ .chezmoi.homeDir }}/.local/bin/diary-append"
+      },
+      "icon": {
+        "kind": "symbol",
+        "value": "long.text.page.and.pencil.fill"
+      },
+      "id": "5657DA4B-6E3A-4F9E-A548-BB5BA52CBC87",
+      "isAIEnhancementEnabled": false,
+      "isDefault": false,
+      "isEnabled": true,
+      "isRealtimeTranscriptionEnabled": true,
+      "isTextFormattingEnabled": true,
+      "name": "Diary",
+      "outputMode": "customCommand",
+      "selectedAIModel": "openai/gpt-oss-120b",
+      "selectedAIProvider": "OpenRouter",
+      "selectedLanguage": "auto",
+      "selectedTranscriptionModelName": "parakeet-tdt-0.6b-v3",
+      "useClipboardContext": false,
+      "useScreenCapture": true,
+      "useSelectedTextContext": false
+    }
+  ],
+  "pasteMethod": "default",
+  "selectedStartSoundSelection": "builtIn",
+  "selectedStopSoundSelection": "builtIn",
+  "useAppleScriptPaste": false
+}

@@ -12,4 +12,5 @@ tmp/**
 Library/LaunchAgents/**
 .local/bin/inbox-herdr-agent
 .local/bin/inbox-watch
+.local/bin/voiceink-prefs
 {{- end }}
