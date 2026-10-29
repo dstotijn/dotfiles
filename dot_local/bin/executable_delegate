@@ -166,7 +166,7 @@ fi
 
 coordinator=$(jq -r 'if .name then "\(.agent) agent `\(.name)`" else "\(.agent) agent" end' <<<"$caller")
 if [ -n "$coordinator" ]; then
-  footer="Delegated by the $coordinator in Herdr pane $HERDR_PANE_ID. Report back with \`herdr agent prompt $HERDR_PANE_ID \"<message>\"\` (no --wait): once if you have a question this brief does not settle, and once when you are done. Never use --no-verify. Do not push or open pull requests unless this brief says so."
+  footer="Delegated by the $coordinator in Herdr pane $HERDR_PANE_ID. Report back with \`herdr agent prompt $HERDR_PANE_ID \"<message>\"\` (no --wait): once if you have a question this brief does not settle, and once when you are done. Run that exact shell command directly, without the herdr skill: you are inside Herdr even if HERDR_ENV is missing from your environment, and the command works without it. Never use --no-verify. Do not push or open pull requests unless this brief says so."
 else
   footer="Delegated from Herdr pane $HERDR_PANE_ID. When you are done, summarize your work in your own session. Never use --no-verify. Do not push or open pull requests unless this brief says so."
 fi
