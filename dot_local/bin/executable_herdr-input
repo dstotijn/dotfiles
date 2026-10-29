@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Print what is typed in a coding agent's input box in Herdr. Plain screen
+# reads show Claude Code's suggested next prompt and Codex's placeholder as if
+# they were typed; both are drawn dim (SGR 2), so this reads the screen with
+# styling and drops the dim text. Strictly read-only.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: herdr-input <pane-or-agent>
+
+Print the text typed in the input box of a Claude Code or Codex agent,
+without suggested prompts or placeholders.
+
+Arguments:
+  <pane-or-agent>  Pane ID (such as w12:p1) or agent name
+
+Output:
+  The typed text, one line per screen row. No output with exit status 0
+  means the input box is empty. Exit status 1 means no input box is on
+  screen, for example while a permission dialog is open.
+
+Options:
+  -h, --help       Show this help
+EOF
+}
+
+case ${1:-} in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  "" | -*)
+    usage >&2
+    exit 2
+    ;;
+esac
+[ $# -eq 1 ] || { usage >&2; exit 2; }
+
+screen=$(herdr agent read "$1" --source visible --ansi)
+
+# Claude Code draws its box between two ─ borders and starts it with ❯. Codex
+# starts it with › below a shaded blank row. Requiring that line above keeps
+# the ❯ or › cursor of a selection dialog from passing for the input box.
+# Wrapped rows follow indented by two spaces.
+printf '%s\n' "$screen" | perl -CSD -Mutf8 -ne '
+  sub plain {
+    my ($line) = @_;
+    my ($out, $dim) = ("", 0);
+    for my $part (split /(\e\[[0-9;:?]*[ -\/]*[@-~]|\e\][^\a\e]*(?:\a|\e\\)|\e.)/, $line) {
+      if ($part =~ /^\e\[([0-9;:]*)m$/) {
+        my @p = split /;/, $1 eq "" ? "0" : $1, -1;
+        while (@p) {
+          my $p = shift @p;
+          if ($p =~ /^[345]8$/) {
+            # Skip the colour that follows: 5;N or 2;R;G;B.
+            my $mode = shift(@p) // "";
+            splice @p, 0, $mode eq "5" ? 1 : $mode eq "2" ? 3 : 0;
+          } elsif ($p eq "2") {
+            $dim = 1;
+          } elsif ($p eq "0" || $p eq "" || $p eq "22") {
+            $dim = 0;
+          }
+        }
+      } elsif ($part !~ /^\e/) {
+        $out .= $part unless $dim;
+      }
+    }
+    return $out;
+  }
+  sub bare { my $s = $_[0]; $s =~ s/\e\[[0-9;:?]*[ -\/]*[@-~]|\e\][^\a\e]*(?:\a|\e\\)|\e.//g; $s }
+
+  s/\r?\n\z//;
+  push @raw, $_;
+  END {
+    my $start;
+    for my $i (reverse 1 .. $#raw) {
+      my ($line, $above) = (bare($raw[$i]), bare($raw[$i - 1]));
+      if (($line =~ /^❯(?:[ \x{a0}]|$)/ && $above =~ /^─+\s*$/) ||
+          ($line =~ /^›(?:[ \x{a0}]|$)/ && $above =~ /^\s*$/)) {
+        $start = $i;
+        last;
+      }
+    }
+    exit 1 unless defined $start;
+
+    my @rows = (plain($raw[$start]) =~ s/^[❯›][ \x{a0}]?//r);
+    for my $i ($start + 1 .. $#raw) {
+      last unless bare($raw[$i]) =~ /^  \S/;
+      push @rows, plain($raw[$i]) =~ s/^  //r;
+    }
+    s/\s+\z// for @rows;
+    pop @rows while @rows && $rows[-1] eq "";
+    print "$_\n" for @rows;
+  }
+' || {
+  echo "herdr-input: no input box on screen for $1" >&2
+  exit 1
+}

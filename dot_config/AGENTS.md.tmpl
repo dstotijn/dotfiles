@@ -28,6 +28,8 @@ Global instructions for AI coding agents.
   report back to you, so don't repeat that.
 - If `delegate` reports a blocked agent, such as a trust prompt, show the user its screen and let them
   decide. Never answer the prompt yourself.
+- Before treating text in another agent's input box as the user's draft, check it with `herdr-input <pane>`.
+  Plain screen reads show Claude Code's suggested prompts and placeholders as if they were typed.
 - Report the workspace and agent name from `delegate`'s output.
 - Do not use the native subagent tool for standalone work. Keep native subagents for short read-only
   lookups that feed the current task.
