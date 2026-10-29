@@ -1,0 +1,61 @@
+#!/bin/sh
+# Records a call as two WAV files, so each side can be transcribed on its own:
+# mic.wav from the default input device (sox) and system.wav from everything
+# the Mac plays (catap, Core Audio process taps, macOS 14.2+). Ctrl+C stops both.
+#
+#   rec-call [name]   record into ~/Recordings/<name> (default: date and time)
+#   rec-call --test   record 5 seconds and report the peak level of each side
+#
+# The terminal app needs "Screen & System Audio Recording" permission, which
+# only applies after it restarts. Without it macOS delivers silence instead of
+# an error, so run --test with something playing before an important call.
+
+set -eu
+
+catap() { uvx --quiet --python 3.12 catap "$@"; }
+
+peak() { sox "$1" -n stat 2>&1 | awk '/^Maximum amplitude/ { print $3 }'; }
+
+if [ "${1:-}" = "--test" ]; then
+  dir=$(mktemp -d)
+  trap 'rm -rf "$dir"' EXIT
+  echo "Recording 5 seconds. Play some audio and say something."
+  catap record --system -d 5 -o "$dir/system.wav" >/dev/null &
+  sox -q -d -b 16 "$dir/mic.wav" trim 0 5
+  wait
+  for side in system mic; do
+    level=$(peak "$dir/$side.wav")
+    case $level in
+      0 | 0.000000) echo "$side: SILENT" ;;
+      *) echo "$side: peak $level" ;;
+    esac
+  done
+  exit
+fi
+
+dir="$HOME/Recordings/${1:-$(date +%Y-%m-%d-%H%M)}"
+mkdir -p "$dir"
+for f in "$dir/mic.wav" "$dir/system.wav"; do
+  if [ -e "$f" ]; then
+    echo "rec-call: $f already exists" >&2
+    exit 1
+  fi
+done
+
+# Background jobs in a script ignore SIGINT, and Python then never installs
+# its Ctrl+C handler. Job control gives each recorder its own process group
+# with default signal handling, and the trap forwards Ctrl+C to both groups.
+set -m
+catap record --system -o "$dir/system.wav" </dev/null &
+system_pid=$!
+sox -q -d -b 16 "$dir/mic.wav" </dev/null &
+mic_pid=$!
+trap 'kill -INT -- "-$system_pid" "-$mic_pid" 2>/dev/null || true' INT TERM
+
+echo "Recording to $dir. Headphones on? Ask for consent. Ctrl+C to stop."
+wait || true
+wait || true
+
+for side in system mic; do
+  echo "$dir/$side.wav: $(sox --i -d "$dir/$side.wav" 2>/dev/null || echo missing)"
+done
