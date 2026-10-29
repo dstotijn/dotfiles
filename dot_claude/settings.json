@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/scripts/hindsight-recall-hook.sh",
+            "command": "~/.claude/scripts/hindsight-recall-hook.sh claude",
             "timeout": 10
           }
         ]

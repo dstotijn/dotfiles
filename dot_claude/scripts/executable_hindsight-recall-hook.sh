@@ -17,6 +17,7 @@
 # Never exits non-zero and never writes anything but the directive to stdout.
 
 GLOBAL_BANK=global  # keep in sync with the banks in AGENTS.md
+agent=${1:-unknown}
 
 command -v jq >/dev/null 2>&1 || exit 0
 
@@ -48,10 +49,17 @@ cat <<TXT
 Engineering memory: this session is on $id (branch $branch). This repository's
 Hindsight bank is $bank; cross-project knowledge is in $GLOBAL_BANK.
 
-Before reading much code, recall prior engineering memory for it. Run both; they
+Before reading much code, use a supplied driver memory brief, or recall prior
+engineering memory with the Hindsight skill. Run both queries when recalling; they
 answer different questions:
-  hindsight -o json memory recall $bank "$id prior work, decisions, and blockers" --tags issue:$id --max-tokens 2048
-  hindsight -o json memory recall $bank "<subsystem> known pitfalls, constraints, and confirmed fixes" --max-tokens 2048
+  hindsight-recall recall $bank "$id prior work, decisions, and blockers" --tags issue:$id --max-tokens 1024 --agent $agent
+  hindsight-recall recall $bank "<subsystem> known pitfalls, constraints, and confirmed fixes" --max-tokens 2048 --agent $agent
+
+When a recalled fact changes what you do, record it with the recall's recall_id:
+  hindsight-recall used <recall_id> --kind decision|workaround|constraint --fact-id <id>
+
+Restricted peers use the driver's memory brief instead of localhost CLI calls; ask
+the driver for missing memory without changing sandbox permissions.
 
 Replace <subsystem> with the code path or component the issue actually touches; do
 not run it with the placeholder. Treat results as fallible and possibly stale: the

@@ -83,6 +83,10 @@ only: no file changes, external mutations, delegation, or further peer launches.
 Provide the complete task-specific brief and your current position; inherited
 instructions and skills need not be pasted.
 
+Before sending the brief, follow `peer-consult`'s driver-side memory step when
+past decisions or workarounds matter. Supply the resulting memory brief directly;
+the peer's restricted tools need no Hindsight access.
+
 ## Confer in the same session
 
 Submit the brief as one literal argument through the agent surface, not raw

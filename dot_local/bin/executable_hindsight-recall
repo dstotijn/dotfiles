@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""Compact, explicit Hindsight recalls with local usage measurements."""
+
+import argparse
+import collections
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import uuid
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc)
+
+
+def log_path():
+    return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "hindsight/usage.jsonl"
+
+
+def record(event):
+    path = log_path()
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a") as stream:
+        stream.write(json.dumps({"at": now().isoformat(), **event}) + "\n")
+
+
+def events():
+    path = log_path()
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+def recall(args):
+    command = ["hindsight", "-o", "json", "memory", "recall", args.bank, args.query,
+               "--max-tokens", str(args.max_tokens)]
+    if args.tags:
+        command += ["--tags", args.tags, "--tags-match", "any_strict"]
+    started = time.monotonic()
+    error = None
+    raw = ""
+    facts = []
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=45)
+        raw = result.stdout
+        if result.returncode:
+            error = "cli_error"
+            # Preserve the CLI diagnostic; do not misclassify it as server downtime.
+            print(result.stderr or result.stdout, file=sys.stderr, end="")
+        else:
+            data = json.loads(raw)
+            for fact in data.get("results", []):
+                facts.append({key: value for key, value in {
+                    "id": fact.get("id"), "document_id": fact.get("document_id"),
+                    "text": fact.get("text"), "context": fact.get("context"),
+                    "date": fact.get("occurred_start") or fact.get("mentioned_at"),
+                }.items() if value is not None})
+    except FileNotFoundError:
+        error = "cli_missing"
+        print("hindsight is not on PATH; ask the driver to supply a memory brief.", file=sys.stderr)
+    except subprocess.TimeoutExpired:
+        error = "timeout"
+        print("Recall timed out; use hindsight health before diagnosing server downtime.", file=sys.stderr)
+    except json.JSONDecodeError:
+        error = "invalid_json"
+        print("Hindsight returned invalid JSON.", file=sys.stderr)
+    recall_id = str(uuid.uuid4())
+    output = {"recall_id": recall_id, "bank": args.bank, "results": facts}
+    if error:
+        output["error"] = error
+    encoded = json.dumps(output, ensure_ascii=False, separators=(",", ":"))
+    if not args.no_log:
+        record({"event": "recall", "recall_id": recall_id, "agent": args.agent,
+                "bank": args.bank, "status": error or "ok", "facts": len(facts),
+                "fact_ids": [fact["id"] for fact in facts if "id" in fact],
+                "elapsed_ms": round((time.monotonic() - started) * 1000),
+                "raw_bytes": len(raw.encode()), "compact_bytes": len(encoded.encode())})
+    print(encoded)
+    return 1 if error else 0
+
+
+def used(args):
+    source = next((e for e in events() if e.get("event") == "recall"
+                   and e.get("recall_id") == args.recall_id), None)
+    if not source or source["status"] != "ok" or not source["facts"]:
+        print("Use a successful, nonempty recall ID from this machine's usage log.", file=sys.stderr)
+        return 1
+    if not set(args.fact_id).issubset(source["fact_ids"]):
+        print("Every fact ID must belong to this recall.", file=sys.stderr)
+        return 1
+    record({"event": "used", "recall_id": args.recall_id, "kind": args.kind,
+            "fact_ids": args.fact_id})
+    print(json.dumps({"recorded": args.recall_id, "kind": args.kind}))
+    return 0
+
+
+def stats(args):
+    since = now() - dt.timedelta(days=args.days)
+    entries = events()
+    recalls = [e for e in entries if e["event"] == "recall"
+               and dt.datetime.fromisoformat(e["at"]) >= since]
+    used_ids = {e["recall_id"] for e in entries if e["event"] == "used"}
+    report = {}
+    for harness in sorted({e["agent"] for e in recalls}):
+        group = [e for e in recalls if e["agent"] == harness]
+        successful = [e for e in group if e["status"] == "ok"]
+        raw_bytes = sum(e["raw_bytes"] for e in successful)
+        report[harness] = {
+            "attempts": len(group), "successful": len(successful),
+            "nonempty": sum(e["facts"] > 0 for e in successful),
+            "explicitly_used": sum(e["recall_id"] in used_ids for e in successful),
+            "errors": dict(collections.Counter(e["status"] for e in group if e["status"] != "ok")),
+            "mean_elapsed_ms": round(sum(e["elapsed_ms"] for e in group) / len(group)),
+            "raw_bytes": raw_bytes,
+            "compact_bytes": sum(e["compact_bytes"] for e in successful),
+        }
+    print(json.dumps({"since": since.isoformat(), "agents": report,
+                      "note": "Explicit use is agent-reported; bytes are not tokens or time saved."}, indent=2))
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    read = commands.add_parser("recall", help="Recall facts without entity or scoring metadata")
+    read.add_argument("bank")
+    read.add_argument("query")
+    read.add_argument("--tags", help="Comma-separated tags; always uses any_strict")
+    read.add_argument("--max-tokens", type=int, choices=range(1, 8193), default=1024, metavar="N")
+    read.add_argument("--agent", choices=["claude", "codex", "other", "unknown"], default="unknown")
+    read.add_argument("--no-log", action="store_true", help="Diagnostics only: omit local usage metadata")
+    read.set_defaults(run=recall)
+    mark = commands.add_parser("used", help="Record a concrete use after applying a recalled fact")
+    mark.add_argument("recall_id")
+    mark.add_argument("--kind", required=True, choices=["decision", "workaround", "constraint"])
+    mark.add_argument("--fact-id", action="append", required=True)
+    mark.set_defaults(run=used)
+    summary = commands.add_parser("stats", help="Summarize local explicit recalls and uses")
+    summary.add_argument("--days", type=int, default=7)
+    summary.set_defaults(run=stats)
+    args = parser.parse_args()
+    return args.run(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
