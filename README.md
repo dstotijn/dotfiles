@@ -233,11 +233,9 @@ as an unencrypted, mode `0600` file so native `ssh-keygen` can sign without OS-s
 
 ## Codex Configuration
 
-`dot_codex/modify_private_config.toml` enforces GPT-6.1 Sol with medium reasoning,
+`dot_codex/modify_private_config.toml` enforces GPT-6.1 Sol with high reasoning,
 alongside the existing global approval and sandbox defaults. The partial-file
 modifier preserves profiles, MCP settings, and other machine-specific state.
-Machine-local instructions can select high reasoning explicitly for Codex peer
-reviews without changing the normal medium-reasoning default.
 
 ## OMP Configuration
 

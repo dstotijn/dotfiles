@@ -10,7 +10,7 @@ function add_missing_settings() {
         print "model = \"gpt-6.1-sol\""
     }
     if (!model_reasoning_effort_set) {
-        print "model_reasoning_effort = \"medium\""
+        print "model_reasoning_effort = \"high\""
     }
     if (!approval_policy_set) {
         print "approval_policy = \"never\""
@@ -31,7 +31,7 @@ in_root && /^model[[:space:]]*=/ {
 }
 
 in_root && /^model_reasoning_effort[[:space:]]*=/ {
-    print "model_reasoning_effort = \"medium\""
+    print "model_reasoning_effort = \"high\""
     model_reasoning_effort_set = 1
     next
 }
