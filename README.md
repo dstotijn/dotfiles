@@ -225,7 +225,7 @@ The fish config (`dot_config/fish/config.fish.tmpl`) initializes tools in order:
 
 Mise pins Bun, and the OMP after-script installs `@oh-my-pi/pi-coding-agent` into a dedicated Bun global directory. The script only installs OMP when its launcher is missing. Run `omp update` to upgrade OMP; the Fish wrapper refreshes completions after an update. Chezmoi does not pin or replace OMP's version.
 
-Claude Code, Codex, Pi, OMP, and OpenCode2 are launched through Fish functions that inject the
+Claude Code, Codex, Pi, OMP, and OpenCode2 (also as `opencode` or `oc`) are launched through Fish functions that inject the
 command-scoped Git configuration in `dot_config/git/agent.gitconfig.tmpl`. Agent commits use a
 dedicated signing-only SSH key at `~/.ssh/id_ed25519_agent_signing`; interactive Git continues to
 use the 1Password signer. The private key stays outside chezmoi and is provisioned from 1Password
