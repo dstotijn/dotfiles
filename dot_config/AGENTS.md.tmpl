@@ -67,6 +67,13 @@ Global instructions for AI coding agents.
   comments, chat messages), write every issue ID and pull request number as a link to it. Don't link
   IDs inside code blocks or diagrams, where links don't render.
 
+## Pull request reviews
+
+- When you start reviewing a GitHub pull request, add me as a reviewer on it first, unless I am its
+  author or already a requested reviewer:
+  `gh pr edit <number> --add-reviewer "$(gh api user --jq .login)"`. `--add-reviewer` has no `@me`
+  shorthand.
+
 ## Shell
 
 - The user's interactive shell is Fish. Use Fish syntax for commands intended to run interactively, but use each
