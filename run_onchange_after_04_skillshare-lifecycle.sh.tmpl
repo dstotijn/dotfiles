@@ -1,7 +1,7 @@
 {{- if eq .chezmoi.os "darwin" -}}
 #!/bin/bash
 
-# Skillshare config hash: {{ include "dot_config/skillshare/config.yaml" | sha256sum }}
+# Skillshare config hash: {{ include "dot_config/skillshare/config.yaml.tmpl" | sha256sum }}
 # Public metadata seed hash: {{ include "dot_config/skillshare/metadata-seed.json" | sha256sum }}
 # Mise config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
 
@@ -103,5 +103,6 @@ with tempfile.NamedTemporaryFile(mode="w", dir=source_dir, delete=False) as f:
 os.replace(temp_path, metadata_path)
 
 subprocess.run(["skillshare", "sync", "--global"], check=True)
+subprocess.run(["skillshare", "sync", "mcp", "--global", "--no-tui"], check=True)
 PY
 {{ end -}}

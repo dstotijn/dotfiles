@@ -1,0 +1,7 @@
+#!/bin/sh
+
+export OPENCODE_BROWSER_ALLOW_FOREGROUND=0
+export OPENCODE_BROWSER_AGENT_WINDOW=current
+export OPENCODE_BROWSER_GHOST_CURSOR=1
+
+exec mise exec -- node "$HOME/.local/share/browse/current/cli/dist/cli.mjs" "$@"

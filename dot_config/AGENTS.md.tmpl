@@ -79,6 +79,18 @@ Global instructions for AI coding agents.
 - The user's interactive shell is Fish. Use Fish syntax for commands intended to run interactively, but use each
   script or runtime's required dialect (for example, POSIX sh or Bash) when writing or editing code.
 
+## Browser automation
+
+- Use Browse (`anomalyco/browse`) through its MCP tools or the `browse` CLI for browser automation and UI QA.
+  It drives the user's existing ungoogled Chromium through the Browse extension. Before using it, read
+  `~/.local/share/skillshare/skills/anomalyco/browse/SKILL.md` (also available through `browse skill`).
+- Use a separate, named Browse session for each task. Work in its tabs, or a tab the user explicitly lends
+  through the extension. Inspect the page, act, and verify the result.
+- Prefer navigation in the same tab where the flow permits it. Links with `target="_blank"` and page-created
+  popups can bring Chromium forward on macOS. Keep foreground access disabled and avoid `bringToFront()`.
+- If Browse is unavailable, run `browse doctor` and resolve the connection with the user. Use another browser
+  driver, including Claude in Chrome, only when the user explicitly requests it.
+
 ## Security
 
 - Never cat/read .env files — they may contain secrets. Use `grep` for specific non-secret keys if needed.

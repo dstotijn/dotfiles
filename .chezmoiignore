@@ -9,7 +9,9 @@ tmp/**
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}
+Applications/Chromium Browse.app/**
 Library/LaunchAgents/**
+.local/bin/chromium
 .local/bin/inbox-herdr-agent
 .local/bin/inbox-watch
 .local/bin/voiceink-prefs

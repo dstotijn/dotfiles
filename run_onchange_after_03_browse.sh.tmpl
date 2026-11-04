@@ -1,0 +1,49 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+set -euo pipefail
+
+{{ $browse := index (include "dot_config/skillshare/metadata-seed.json" | fromJson).entries "anomalyco/browse" -}}
+revision={{ $browse.branch | quote }}
+browse_root="$HOME/.local/share/browse"
+source_dir="$browse_root/source/$revision"
+
+mkdir -p "$browse_root/source"
+if [ ! -d "$source_dir" ]; then
+  staging=$(mktemp -d "$browse_root/source/.install-XXXXXX")
+  trap 'rm -rf "$staging"' EXIT
+  curl --fail --location --silent --show-error \
+    "https://github.com/anomalyco/browse/archive/$revision.tar.gz" \
+    | tar -xz --strip-components=1 -C "$staging"
+  mv "$staging" "$source_dir"
+  trap - EXIT
+fi
+
+cd "$source_dir"
+if [ ! -f cli/dist/cli.mjs ] || [ ! -f dist/manifest.json ]; then
+  mise exec -- bun install --frozen-lockfile
+  (
+    cd cli
+    mise exec -- bun install --frozen-lockfile
+    mise exec -- bun run build
+  )
+fi
+ln -sfn "$source_dir" "$browse_root/current"
+
+# Use the pinned build's pairing format without changing any harness configuration.
+mise exec -- bun --eval '
+import { bundledPairingCodeTtlMs, mintPairingCode, writeExtensionPairing } from "./cli/src/browser-pairing.ts";
+writeExtensionPairing("dist", mintPairingCode(undefined, { ttlMs: bundledPairingCodeTtlMs }));
+'
+
+if "$HOME/.local/bin/browse" status --json | mise exec -- node --input-type=module -e '
+let input = "";
+for await (const chunk of process.stdin) input += chunk;
+process.exit(JSON.parse(input).extension.connected ? 0 : 1);
+'; then
+  "$HOME/.local/bin/browse" settings set window=current grouping=session cursor=always
+else
+  echo "Browse is ready. In ungoogled Chromium, load $browse_root/current/dist unpacked."
+  echo "If pairing expires before loading it, run browse pair and enter the code in Browse's options."
+fi
+{{ end -}}

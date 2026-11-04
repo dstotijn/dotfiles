@@ -69,14 +69,54 @@ chezmoi cd                 # Open shell in source directory
 
 ## AI Agent Instructions
 
-`dot_config/AGENTS.md.tmpl` renders to `~/.config/AGENTS.md`, which four harnesses read through symlinks:
+`dot_config/AGENTS.md.tmpl` renders to `~/.config/AGENTS.md`, which five harnesses read through symlinks:
 
 | Target | Source path |
 |--------|-------------|
 | `~/.claude/CLAUDE.md` | `dot_claude/symlink_CLAUDE.md.tmpl` |
 | `~/.codex/AGENTS.md` | `dot_codex/symlink_AGENTS.md.tmpl` |
 | `~/.config/opencode/AGENTS.md` | `dot_config/opencode/symlink_AGENTS.md.tmpl` |
+| `~/.omp/agent/AGENTS.md` | `dot_omp/private_agent/symlink_AGENTS.md.tmpl` |
 | `~/.pi/agent/AGENTS.md` | `dot_pi/agent/symlink_AGENTS.md.tmpl` |
+
+### Browser automation
+
+All five harnesses use [Browse](https://github.com/anomalyco/browse) with the extension in
+ungoogled Chromium. Skillshare distributes its skill to every harness and registers the
+`browse` MCP server in Claude Code, Codex, and OpenCode. OMP and Pi use the same backend
+through the `browse` CLI. `opencode-browser` is an alias used by the upstream skill.
+
+On macOS, `run_onchange_after_03_browse.sh.tmpl` builds the source revision pinned by the
+`anomalyco/browse` entry in `dot_config/skillshare/metadata-seed.json`, using mise-managed
+Bun and Node. The CLI and skill share that pin. The launcher keeps foreground access off,
+uses the current browser window, and shows the agent cursor. Tabs are grouped per session.
+Pairing codes and browser tokens stay outside the repository.
+
+After applying on a new machine:
+
+1. In ungoogled Chromium, open `chrome://extensions` and enable Developer mode.
+2. Choose **Load unpacked**, then `~/.local/share/browse/current/dist`. The bundled code
+   pairs the extension automatically for an hour after setup. If it expires, run
+   `browse pair` and enter its code in the extension's options.
+3. Run `browse doctor` and restart the harness sessions.
+
+Update the `anomalyco/browse` pin through the [Skillshare pin workflow](#skillshare-pins)
+while harness sessions are closed. Apply, then use **Load unpacked** with the current
+folder again: Chromium remembers the resolved revision path, so reloading the old folder
+alone does not select the new build. Run `browse relay restart` and restart the harnesses.
+
+Claude in Chrome is disabled by the user-config modifier and Fish launcher, with its
+tools denied in Claude Code's settings. OMP's built-in browser is disabled, and the
+agent-browser skill is excluded globally. The shared instructions prefer same-tab
+navigation because popup links can bring Chromium forward on macOS.
+
+To hide Chromium's debugging banner, fully quit Chromium with **⌘Q**, then run
+`chromium` or open `~/Applications/Chromium Browse.app`. You can drag that launcher
+from Finder into the Dock for future launches. Both start `/Applications/Chromium.app`
+with `--silent-debugger-extension-api`, which suppresses debugging banners for all
+extensions. The flag takes effect only at browser startup; launching the original
+Chromium app after quitting does not preserve it. Applying these dotfiles does not
+restart Chromium.
 
 ### Peer consultation
 
@@ -130,10 +170,11 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 2. `run_onchange_00_linux-install.sh.tmpl` — (Linux) Installs apt packages, CLI tools, mise, Go tools, mcfly; sets fish as default shell
 3. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
 4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
-5. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skill targets
-6. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
-7. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
-8. `run_onchange_after_09_voiceink-prefs.sh.tmpl`: (macOS) Writes the versioned VoiceInk preferences when they change
+5. `run_onchange_after_03_browse.sh.tmpl` — (macOS) Builds the pinned Browse CLI and unpacked extension, and prepares pairing
+6. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skills and MCP entries
+7. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
+8. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
+9. `run_onchange_after_09_voiceink-prefs.sh.tmpl`: (macOS) Writes the versioned VoiceInk preferences when they change
 
 The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
 checks for a missing launcher on every `chezmoi apply`.

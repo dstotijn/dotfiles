@@ -5,5 +5,5 @@ function claude --description "Run Claude Code with permission bypass and agent 
   if test "$HERDR_ENV" = 1
     set -fx FORCE_HYPERLINK 1
   end
-  __run_coding_agent claude --dangerously-skip-permissions $argv
+  __run_coding_agent claude --dangerously-skip-permissions --no-chrome $argv
 end
