@@ -16,6 +16,26 @@ catap() { uvx --quiet --python 3.12 catap "$@"; }
 
 peak() { sox "$1" -n stat 2>&1 | awk '/^Maximum amplitude/ { print $3 }'; }
 
+usage="usage: rec-call [name] | rec-call --test"
+
+# Anything else that looks like an option is a mistake, not a recording name.
+case ${1:-} in
+  -h | --help)
+    echo "$usage"
+    exit
+    ;;
+  --test) ;;
+  -*)
+    echo "rec-call: unknown option $1" >&2
+    echo "$usage" >&2
+    exit 2
+    ;;
+esac
+if [ $# -gt 1 ]; then
+  echo "$usage" >&2
+  exit 2
+fi
+
 if [ "${1:-}" = "--test" ]; then
   dir=$(mktemp -d)
   trap 'rm -rf "$dir"' EXIT
