@@ -1,4 +1,7 @@
 .config/fish/functions/gw.fish
+.config/tmux
+.tmux
+.tmux.conf
 .config/skillshare/skills
 .config/git/agent-ssh-sign
 .claude/skills/codex-peer-transport/scripts
