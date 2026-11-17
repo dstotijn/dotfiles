@@ -115,6 +115,11 @@ options=(
   --append-system-prompt-file "$role_file"
   -n "$name"
 )
+# Stopping a background session leaves its background commands running. With
+# the session gone, any watcher left is an orphan that would poll and move
+# cursors next to the new one.
+pkill -f "$HOME/.local/bin/inbox-watch\$" || true
+
 known=$(claude agents --json --all)
 if [ -z "$session_id" ]; then
   args=("${options[@]}")
