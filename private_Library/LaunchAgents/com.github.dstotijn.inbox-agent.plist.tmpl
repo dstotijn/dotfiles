@@ -3,21 +3,25 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.github.dstotijn.inbox-herdr-agent</string>
+  <string>com.github.dstotijn.inbox-agent</string>
   <key>ProgramArguments</key>
   <array>
-    <string>{{ .chezmoi.homeDir }}/.local/bin/inbox-herdr-agent</string>
+    <string>{{ .chezmoi.homeDir }}/.local/bin/inbox-agent</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
     <string>{{ .chezmoi.homeDir }}/.local/bin:{{ .chezmoi.homeDir }}/.local/share/mise/shims:/opt/homebrew/bin:/usr/bin:/bin</string>
   </dict>
+  <!-- The Claude Code daemon that runs the background session may be started
+       by this job. Keep launchd from killing it when the job exits. -->
+  <key>AbandonProcessGroup</key>
+  <true/>
   <key>RunAtLoad</key>
   <true/>
   <key>StartInterval</key>
   <integer>60</integer>
   <key>StandardErrorPath</key>
-  <string>{{ .chezmoi.homeDir }}/Library/Logs/inbox-herdr-agent.log</string>
+  <string>{{ .chezmoi.homeDir }}/Library/Logs/inbox-agent.log</string>
 </dict>
 </plist>

@@ -10,3 +10,5 @@
 .local/bin/diary-timer
 Library/LaunchAgents/com.github.dstotijn.alink-herdr-agent.plist
 Library/LaunchAgents/com.github.dstotijn.diary-herdr-agent.plist
+.local/bin/inbox-herdr-agent
+Library/LaunchAgents/com.github.dstotijn.inbox-herdr-agent.plist
