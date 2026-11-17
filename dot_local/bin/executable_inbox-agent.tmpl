@@ -94,6 +94,13 @@ if [ ! -e "$state_dir/diary-cursor" ] && [ -s "$old_diary_cursor" ]; then
 fi
 {{- end }}
 
+# macOS asks before a process that launchd started reads iCloud Drive, where
+# the vault lives, and asks again for every Claude Code version. Background
+# sessions run under the Claude Code daemon, and one started from a terminal
+# has the terminal's access. Wait for such a daemon rather than start one:
+# `claude agents` and `claude --bg` would start it from here.
+pgrep -qf 'claude daemon run' || exit 0
+
 # Alive in any form, background or interactive: leave it alone. Resuming a
 # running session would start a copy, so give up when the list is unavailable.
 session_id=$(cat "$session_file" 2>/dev/null || true)
@@ -111,17 +118,20 @@ options=(
 known=$(claude agents --json --all)
 if [ -z "$session_id" ]; then
   args=("${options[@]}")
+  cd "$cwd"
 elif jq -e --arg id "$session_id" 'any(.[]; .sessionId == $id and .kind == "background")' <<<"$known" >/dev/null; then
-  # A background session keeps the options it started with, and passing any
-  # option would start a copy instead of continuing it.
+  # A background session keeps the options and working directory it started
+  # with, and passing any option would start a copy instead of continuing it.
+  # Staying out of the vault keeps this process away from iCloud Drive.
   args=(--resume "$session_id")
+  cd "$HOME"
 else
   # An interactive session, such as the Herdr pane this replaced: continue it
   # in the background under the same ID, with the inbox's options.
   args=("${options[@]}" --resume "$session_id")
+  cd "$cwd"
 fi
 
-cd "$cwd"
 if ! output=$(claude --bg "${args[@]}" 'Start inbox-watch in the background now, process every source after its cursor, then wait.' 2>&1); then
   printf '%s %s\n' "$(date '+%F %T')" "$output" >&2
   # A stale session ID is the likely cause. Start fresh on the next run.
