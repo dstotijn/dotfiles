@@ -10,6 +10,7 @@
     "pr": ""
   },
   "model": "claude-opus-5-5[1m]",
+  "crossSessionInbound": "accept",
   "hooks": {
     "SessionStart": [
       {
