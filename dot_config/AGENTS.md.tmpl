@@ -35,6 +35,16 @@ Global instructions for AI coding agents.
   lookups that feed the current task.
 - Outside Herdr, use a native subagent or do the work in the current session.
 
+## Claude session communication
+
+- Between Claude Code sessions, use native `ListAgents` and `SendMessage`, including for steering work
+  already in progress. Use the Claude session name from `ListAgents` or the `uds:` address in the
+  delegation brief; Herdr agent names can differ from Claude session names.
+- Native delivery leaves the human's prompt input alone. If it is unavailable, held or refused, report
+  the problem instead of falling back to `herdr agent prompt`, paste or simulated keystrokes.
+- Use `herdr agent prompt` for the initial brief to a newly started agent, or for communication involving
+  another harness that requires terminal input.
+
 ## Inbox feed
 
 Only for the session that receives cross-session messages from the session named `inbox`, which is the
