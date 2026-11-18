@@ -60,7 +60,6 @@ chezmoi cd                 # Open shell in source directory
 | Starship | `dot_config/starship.toml` | Minimal prompt configuration |
 | Mise | `dot_config/mise/config.toml` | Runtime/tool version manager (Bun, Go, Node, Python, npm packages) |
 | Worktrunk | `dot_config/worktrunk/config.toml`, `dot_config/fish/{functions,completions}/private_wt.fish` | Git worktrees under each repository's `.worktrees/` directory |
-| Tmux | `dot_config/tmux/tmux.conf` | Terminal multiplexer with vim keybindings and smart-splits |
 | AI agent instructions | `dot_config/AGENTS.md.tmpl` | Shared global instructions, symlinked into Claude Code, Codex, and opencode |
 | Agent commands | `dot_local/agent-bin/`, `dot_zprofile`, `dot_bash_profile` | Commands only coding agents run, first on their `PATH`; `op` shows a Herdr notification naming the agent and its reason before a 1Password prompt |
 | Hindsight | `dot_config/hindsight/`, `dot_local/bin/executable_hindsight-up` | Agent memory server in Docker (slim API plus pgvector), with OpenRouter for every model call; `hindsight-up` reads the key from 1Password and starts it. Only the `global` bank's manifest lives here; a repository opts into its own bank with `git config hindsight.bank <bank>`, which the SessionStart hook reads. The CLI comes from mise |
@@ -169,12 +168,11 @@ Run `chezmoi apply` after editing it, since the rendered file is not a symlink. 
 1. `run_onchange_00_homebrew-install.sh.tmpl` — (macOS) Runs `brew bundle`, sets fish as default shell
 2. `run_onchange_00_linux-install.sh.tmpl` — (Linux) Installs apt packages, CLI tools, mise, Go tools, mcfly; sets fish as default shell
 3. `run_onchange_01_fisher.fish.tmpl` — Installs/updates Fisher plugins when fish_plugins changes
-4. `run_onchange_02_tpm.sh.tmpl` — Installs TPM and tmux plugins when tmux.conf changes
-5. `run_onchange_after_03_browse.sh.tmpl` — (macOS) Builds the pinned Browse CLI and unpacked extension, and prepares pairing
-6. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skills and MCP entries
-7. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
-8. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
-9. `run_onchange_after_09_voiceink-prefs.sh.tmpl`: (macOS) Writes the versioned VoiceInk preferences when they change
+4. `run_onchange_after_03_browse.sh.tmpl` — (macOS) Builds the pinned Browse CLI and unpacked extension, and prepares pairing
+5. `run_onchange_after_04_skillshare-lifecycle.sh.tmpl` — (macOS) Reconciles public skills to their declared commit pins and syncs skills and MCP entries
+6. `run_after_05_omp-install.sh` — Installs OMP through Bun if missing and generates Fish completions
+7. `run_after_08_herdr-sound.sh.tmpl`: (macOS) Converts the Frog system sound to the MP3 that Herdr's notification config expects
+8. `run_onchange_after_09_voiceink-prefs.sh.tmpl`: (macOS) Writes the versioned VoiceInk preferences when they change
 
 The `run_onchange_` scripts are Go templates that embed dependency hashes. The OMP after-script
 checks for a missing launcher on every `chezmoi apply`.
