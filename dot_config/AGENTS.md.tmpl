@@ -30,7 +30,10 @@ Global instructions for AI coding agents.
   decide. Never answer the prompt yourself.
 - Before treating text in another agent's input box as the user's draft, check it with `herdr-input <pane>`.
   Plain screen reads show Claude Code's suggested prompts and placeholders as if they were typed.
-- Report the workspace and agent name from `delegate`'s output.
+- When telling me about a Herdr agent, workspace, tab or pane, identify it by its name or label, such as
+  the agent name or the workspace label from `delegate`'s output, plus what it works on. Never use Herdr's
+  internal IDs (`w11`, `w11:p33`) in text for me; they mean nothing to me. Keep IDs for commands and for
+  messages to other agents.
 - Do not use the native subagent tool for standalone work. Keep native subagents for short read-only
   lookups that feed the current task.
 - Outside Herdr, use a native subagent or do the work in the current session.
@@ -106,8 +109,10 @@ session named `orchestrator`. Other agents skip this section.
 - Keep useful technical detail. Clear prose is not simplistic prose, and concise prose is not
   artificially short.
 - In text for other people (issue trackers, docs and wiki pages, pull request descriptions and
-  comments, chat messages), write every issue ID and pull request number as a link to it. Don't link
-  IDs inside code blocks or diagrams, where links don't render.
+  comments, chat messages), write every issue ID as a link to it. Link a pull request with its full
+  title as the link text instead of its bare number, for example
+  `[feat(api): add rate limits to the export endpoint](https://github.com/acme/app/pull/123)`.
+  Don't link IDs inside code blocks or diagrams, where links don't render.
 
 ## Pull request reviews
 
