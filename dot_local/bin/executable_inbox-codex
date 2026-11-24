@@ -1,0 +1,95 @@
+#!/usr/bin/env bun
+// Run one inbox turn on the existing terminal-started Codex daemon.
+import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [cwd, roleFile, stateDir, prompt] = process.argv.slice(2);
+const waitOnly = prompt === "--wait-idle";
+const target = JSON.parse(readFileSync(join(stateDir, "target.json"), "utf8"));
+// Connecting to the existing socket never starts a daemon from launchd.
+const socket = new WebSocket(`ws+unix://${target.daemon_socket}`);
+const eventsFile = join(stateDir, waitOnly ? "codex-idle-rpc-events.jsonl" : "codex-rpc-events.jsonl");
+writeFileSync(eventsFile, "");
+const messages = [];
+const completed = new Map();
+let waiter, failure, requestId = 0;
+let openedResolve, openedReject;
+const opened = new Promise((resolve, reject) => { openedResolve = resolve; openedReject = reject; });
+function fail(error) {
+  failure = error;
+  openedReject(error);
+  if (waiter) { waiter.reject(error); waiter = undefined; }
+}
+socket.onopen = () => openedResolve();
+socket.onerror = () => fail(new Error("Codex daemon unavailable; inbox will retry"));
+socket.onclose = () => fail(new Error("Codex daemon connection closed; inbox will retry"));
+socket.onmessage = ({ data }) => {
+  const message = JSON.parse(data);
+  if (waiter) { waiter.resolve(message); waiter = undefined; }
+  else messages.push(message);
+};
+const timeout = setTimeout(() => fail(new Error("Inbox turn timed out; reconnect before retrying")), 15 * 60 * 1000);
+
+async function receive() {
+  if (failure) throw failure;
+  const message = messages.length ? messages.shift() : await new Promise((resolve, reject) => { waiter = { resolve, reject }; });
+  appendFileSync(eventsFile, JSON.stringify(message) + "\n");
+  if (message.method && message.id !== undefined) {
+    // Defer human input and approvals rather than answering unattended.
+    socket.send(JSON.stringify({ id: message.id, error: { code: -32601, message: "Inbox requires user intervention" } }));
+    throw new Error("Codex requested user intervention; inbox deferred");
+  }
+  const params = message.params ?? {};
+  if (message.method === "item/completed" && params.item.type === "agentMessage") {
+    writeFileSync(join(stateDir, "codex-last-result.txt"), params.item.text + "\n");
+  }
+  if (message.method === "turn/completed") completed.set(params.turn.id, params.turn);
+  return message;
+}
+
+async function request(method, params) {
+  const id = ++requestId;
+  socket.send(JSON.stringify({ id, method, params }));
+  while (true) {
+    const message = await receive();
+    if (message.id === id) {
+      if (message.error) throw new Error(JSON.stringify(message.error));
+      return message.result;
+    }
+  }
+}
+
+try {
+  await opened;
+  await request("initialize", { clientInfo: { name: "inbox_feeder", version: "1.0" } });
+  socket.send(JSON.stringify({ method: "initialized" }));
+  const sessionFile = join(stateDir, "codex-session-id");
+  const options = { cwd, model: "gpt-6.1-sol", developerInstructions: readFileSync(roleFile, "utf8") };
+  if (existsSync(sessionFile)) options.threadId = readFileSync(sessionFile, "utf8").trim();
+  const { thread } = await request(options.threadId ? "thread/resume" : "thread/start", options);
+  writeFileSync(sessionFile + ".tmp", thread.id + "\n");
+  renameSync(sessionFile + ".tmp", sessionFile);
+  const active = thread.turns.find((turn) => turn.status === "inProgress");
+  let turnId;
+  if (active) {
+    // A disconnected client can leave a turn running. Finish observing it,
+    // then retry this burst, instead of starting a concurrent copy.
+    turnId = active.id;
+  } else if (!waitOnly) {
+    const { turn } = await request("turn/start", {
+      threadId: thread.id, effort: "high", input: [{ type: "text", text: prompt }],
+    });
+    turnId = turn.id;
+  }
+  while (turnId && !completed.has(turnId)) await receive();
+  if (turnId && completed.get(turnId).status !== "completed") {
+    throw new Error("Inbox turn did not complete: " + JSON.stringify(completed.get(turnId)));
+  }
+  if (active && !waitOnly) throw new Error("Previous inbox turn finished; retry this source burst");
+} catch (error) {
+  console.error(`${new Date().toISOString()} inbox-codex: ${error.message}`);
+  process.exitCode = 1;
+} finally {
+  clearTimeout(timeout);
+  socket.close();
+}

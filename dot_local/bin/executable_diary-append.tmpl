@@ -28,4 +28,7 @@ if ! { mkdir -p "$vault/Diary/$month" 2>/dev/null &&
   osascript -e 'display notification "Could not write to the vault. Kept in ~/.local/state/diary/unsaved.md" with title "Diary"' >/dev/null 2>&1 || true
   exit 1
 fi
+# Signal the inbox watcher, which may not be able to read the vault itself.
+inbox_state="${XDG_STATE_HOME:-$HOME/.local/state}/inbox"
+mkdir -p "$inbox_state" && touch "$inbox_state/diary-signal" || true
 {{ end -}}

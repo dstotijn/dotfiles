@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Watch the inbox agent's sources and queue one prompt into the Claude Code
-# session that started this, naming the sources with new items. The prompt
+# Watch the inbox agent's sources and invoke its selected runtime, naming
+# the sources with new items. The prompt
 # carries only source names and counts, never item text, so alink peers and
 # GitHub users cannot inject instructions through it. The inbox agent started
 # by inbox-agent runs this in the background.
@@ -24,7 +24,9 @@ Usage: inbox-watch [--dry-run] [--once]
        inbox-watch github
 
 Without a command, watch alink, the diary and GitHub, and queue one prompt
-into the Claude Code session for each burst of new items.
+into the selected inbox runtime for each burst of new items. A runtime of
+"codex" in ~/.local/state/inbox/target.json selects the background Codex
+feeder; without that file, use the calling Claude Code session.
 
   --dry-run   Print each prompt instead of queueing it
   --once      Check every source once, print the prompt, and exit.
@@ -41,6 +43,9 @@ state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/inbox"
 diary_cursor_file="$state_dir/diary-cursor"
 github_cursor_file="$state_dir/github-cursor"
 alink_pending_file="$state_dir/alink-pending"
+target_file="$state_dir/target.json"
+runtime=claude
+[ ! -s "$target_file" ] || runtime=$(jq -er '.runtime' "$target_file")
 {{- if hasKey . "diary" }}
 vault={{ .diary.vault | squote }}
 diary_dir="${DIARY_VAULT:-$vault}/Diary"
@@ -48,6 +53,10 @@ diary_dir="${DIARY_VAULT:-$vault}/Diary"
 diary_dir="${DIARY_VAULT:+$DIARY_VAULT/Diary}"
 {{- end }}
 diary_interval="${INBOX_DIARY_INTERVAL:-300}"
+# diary-append touches this file, outside the vault, after each entry.
+diary_signal_file="$state_dir/diary-signal"
+diary_signal_seen=$(stat -f %m "$diary_signal_file" 2>/dev/null || echo 0)
+codex_diary_fallback="${INBOX_CODEX_DIARY_FALLBACK:-21600}"
 # Wait this long after the last new item before queueing a prompt, but never
 # longer than the burst limit after the first.
 settle=10
@@ -58,7 +67,7 @@ burst_limit=60
 diary_entries_after() {
   local cursor="$1" file day
   [ -n "$diary_dir" ] && [ -d "$diary_dir" ] || return 0
-  find "$diary_dir" -name '20??-??-??.md' 2>/dev/null | sort | while read -r file; do
+  find "$diary_dir" -name '20??-??-??.md' | sort | while read -r file; do
     day=$(basename "$file" .md)
     [[ "$day" < "${cursor:0:10}" ]] && continue
     { grep -o '^- [0-9][0-9]:[0-9][0-9]:[0-9][0-9]' "$file" || true; } | cut -c3- |
@@ -153,8 +162,14 @@ while [ $# -gt 0 ]; do
 done
 
 if ! $dry_run; then
-  : "${CLAUDE_CODE_MESSAGING_SOCKET:?not running inside a Claude Code session; use --dry-run}"
-  : "${CLAUDE_CODE_MESSAGING_TOKEN:?not running inside a Claude Code session; use --dry-run}"
+  case "$runtime" in
+    codex) ;;
+    claude)
+      : "${CLAUDE_CODE_MESSAGING_SOCKET:?not running inside a Claude Code session; use --dry-run}"
+      : "${CLAUDE_CODE_MESSAGING_TOKEN:?not running inside a Claude Code session; use --dry-run}"
+      ;;
+    *) printf 'Unknown inbox runtime: %s\n' "$runtime" >&2; exit 1 ;;
+  esac
 fi
 mkdir -p "$state_dir"
 
@@ -166,6 +181,10 @@ queue_prompt() {
   prompt="Inbox run: $list. Process new items after each source's cursor."
   if $dry_run; then
     printf '%s\n' "$prompt"
+    return
+  fi
+  if [ "$runtime" = codex ]; then
+    "$HOME/.local/bin/inbox-agent" triage "$prompt"
     return
   fi
   {
@@ -197,7 +216,9 @@ if $once; then
 fi
 
 alink_pid=""
-trap '[ -z "$alink_pid" ] || kill "$alink_pid" 2>/dev/null || true' EXIT
+lock_file="$state_dir/watch.pid"
+shlock -p "$$" -f "$lock_file" || exit 0
+trap '[ -z "$alink_pid" ] || kill "$alink_pid" 2>/dev/null || true; rm -f "$lock_file"' EXIT
 trap 'exit 143' TERM HUP INT
 
 # Counts of new items per source since the last prompt, and the newest item
@@ -206,14 +227,26 @@ alink_new=0 diary_new=0 github_new=0
 diary_announced="" github_announced=""
 first_new=0 last_new=0
 next_diary=0 next_github=0 poll_interval=60 last_modified=""
+retry_after=0
 
 mark_new() {
   [ "$first_new" -gt 0 ] || first_new=$now
   last_new=$now
 }
 
+# A restarted Codex feeder must also pick up unread alink items and ledger
+# changes, even when no fresh event arrives from alink listen.
+if [ "$runtime" = codex ]; then
+  now=$(date +%s)
+  first_new=$now last_new=$now
+fi
+
 while true; do
   now=$(date +%s)
+
+  if [ "$runtime" = codex ] && [ "$first_new" -eq 0 ] && [ -s "$state_dir/pending-summary.md" ]; then
+    "$HOME/.local/bin/inbox-agent" deliver || true
+  fi
 
   if [ -z "$alink_pid" ] || ! kill -0 "$alink_pid" 2>/dev/null; then
     alink listen --notify "$(printf '%q' "$self") alink-batch" >/dev/null &
@@ -226,7 +259,18 @@ while true; do
     mark_new
   fi
 
-  if [ "$now" -ge "$next_diary" ]; then
+  if [ "$runtime" = codex ]; then
+    # launchd cannot read the iCloud vault, and every check costs the Codex
+    # feeder a model turn. Wait for diary-append's signal outside the vault,
+    # with a slow check for entries written some other way.
+    signal=$(stat -f %m "$diary_signal_file" 2>/dev/null || echo 0)
+    if [ "$signal" != "$diary_signal_seen" ] || [ "$now" -ge "$next_diary" ]; then
+      diary_signal_seen=$signal
+      next_diary=$((now + codex_diary_fallback))
+      diary_new=1
+      mark_new
+    fi
+  elif [ "$now" -ge "$next_diary" ]; then
     next_diary=$((now + diary_interval))
     entries=$(diary_entries_after "$(cat "$diary_cursor_file" 2>/dev/null || true)")
     latest=$(tail -1 <<<"$entries")
@@ -250,8 +294,9 @@ while true; do
         if [ -z "$items" ]; then
           # Nothing after the cursor needs me. Move the cursor past it, unless
           # the agent moved it meanwhile.
-          [ "$(cat "$github_cursor_file")" = "$cursor" ] &&
+          if [ "$(cat "$github_cursor_file")" = "$cursor" ]; then
             write_cursor "$github_cursor_file" "$(tail -1 <<<"$scan" | jq -r .scanned_until)"
+          fi
         else
           latest=$(jq -rs 'map(.notification_updated_at) | max' <<<"$items")
           if [[ "$latest" > "$github_announced" ]]; then
@@ -265,13 +310,25 @@ while true; do
     fi
   fi
 
-  if [ "$first_new" -gt 0 ] && { [ $((now - last_new)) -ge "$settle" ] || [ $((now - first_new)) -ge "$burst_limit" ]; }; then
+  if [ "$first_new" -gt 0 ] && [ "$now" -ge "$retry_after" ] &&
+    { [ $((now - last_new)) -ge "$settle" ] || [ $((now - first_new)) -ge "$burst_limit" ]; }; then
     sources=()
     [ "$alink_new" -gt 0 ] && sources+=("alink ($alink_new)")
-    [ "$diary_new" -gt 0 ] && sources+=("diary ($diary_new)")
+    if [ "$diary_new" -gt 0 ]; then
+      if [ "$runtime" = codex ]; then
+        sources+=("diary (periodic check)")
+      else
+        sources+=("diary ($diary_new)")
+      fi
+    fi
     [ "$github_new" -gt 0 ] && sources+=("github ($github_new)")
-    queue_prompt "${sources[@]}"
-    alink_new=0 diary_new=0 github_new=0 first_new=0
+    [ ${#sources[@]} -gt 0 ] || sources+=("startup (1)")
+    if queue_prompt "${sources[@]}"; then
+      alink_new=0 diary_new=0 github_new=0 first_new=0
+    else
+      printf '%s inbox delivery/triage deferred; retrying in one minute\n' "$(date +%H:%M:%S)" >&2
+      retry_after=$((now + 60))
+    fi
   fi
 
   sleep 5
