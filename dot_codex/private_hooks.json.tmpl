@@ -18,7 +18,9 @@
             "type": "command"
           }
         ]
-      }
+      }{{ template "rex-session-start" (dict
+        "path" (joinPath .chezmoi.homeDir ".codex/hooks.json")
+        "agent" "codex") }}
     ]
   }
 }

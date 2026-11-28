@@ -48,7 +48,9 @@
             "timeout": 10
           }
         ]
-      }
+      }{{ template "rex-session-start" (dict
+        "path" (joinPath .chezmoi.homeDir ".claude/settings.json")
+        "agent" "claude") }}
     ],
     "UserPromptSubmit": [
       {

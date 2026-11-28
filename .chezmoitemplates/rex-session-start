@@ -1,0 +1,14 @@
+{{- if stat .path -}}
+  {{- $settings := include .path | mustFromJson -}}
+  {{- $hooks := get $settings "hooks" | default dict -}}
+  {{- $commandPrefix := printf "/bin/sh -c 'rex __internal session-start --agent %s " .agent -}}
+  {{- range get $hooks "SessionStart" | default (list) -}}
+    {{- $commands := get . "hooks" | default (list) -}}
+    {{- if eq (len $commands) 1 -}}
+      {{- $hook := index $commands 0 -}}
+      {{- if and (eq $hook.type "command") (hasPrefix $commandPrefix ($hook.command | default "")) -}}
+        {{- printf ",\n      %s" (toJson .) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
