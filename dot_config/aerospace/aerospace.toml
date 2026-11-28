@@ -212,6 +212,10 @@ run = 'move-node-to-workspace 9_misc'
 if = 'test %{app-bundle-id} = com.mitchellh.ghostty'
 run = 'move-node-to-workspace 0_terminal'
 
+[[on-window-detected]]
+if = 'test %{app-bundle-id} = com.superlogical.rex'
+run = 'move-node-to-workspace 0_terminal'
+
 # Fallback
 [[on-window-detected]]
 if = 'true'
